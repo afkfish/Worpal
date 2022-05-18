@@ -18,7 +18,7 @@ class Seek(commands.Cog):
         # send a message saying that the bot is thinking with a 1-second lifespan
         await ctx.response.send_message('The bot is thinking...')
         # get the voice channel if there is one
-        voice_channel = ctx.author.voice.channel
+        voice_channel = ctx.user.voice.channel
         voice = nextcord.utils.get(main.bot.voice_clients, guild=ctx.guild)
         # if the bot has playen a song before
         if len(main.bot.playing[ctx.guild.id]) != 0:
