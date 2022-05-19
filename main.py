@@ -29,6 +29,12 @@ def bot_announce(guildid):
     return bool(data[str(guildid)]['announce'])
 
 
+def bot_loop(guildid):
+    with open('./settings/settings.json', 'r') as f:
+        data = json.load(f)
+    return bool(data[str(guildid)]['loop'])
+
+
 bot.playing = {}
 bot.music_queue = {}
 bot.guild_ids = []
@@ -41,7 +47,7 @@ async def on_ready():
         data = json.load(f)
     for guild in bot.guilds:
         if guild.id not in data:
-            data.update({str(guild.id): {'announce': False, 'shuffle': False}})
+            data.update({str(guild.id): {'announce': False, 'shuffle': False, 'loop': False}})
         bot.guild_ids.append(guild.id)
         bot.music_queue[guild.id] = []
         bot.playing[guild.id] = ''
@@ -53,7 +59,7 @@ async def on_ready():
 async def on_guid_join(guild):
     with open('./settings/settings.json', 'r') as f:
         data = json.load(f)
-    data.update({str(guild.id): {'announce': False, 'shuffle': False}})
+    data.update({str(guild.id): {'announce': False, 'shuffle': False, 'loop': False}})
     bot.guild_ids.append(guild.id)
     bot.music_queue[guild.id] = []
     bot.playing[guild.id] = ''

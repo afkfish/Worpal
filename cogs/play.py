@@ -55,28 +55,33 @@ class Play(commands.Cog):
                         inline=True)
         main.bot.loop.create_task(ctx.edit_original_message(embed=embed))
 
-    def play_next(self, ctx, vc):
-        if len(main.bot.music_queue[ctx.guild.id]) > 0:
+    def play_next(self, ctx):
+        if len(main.bot.music_queue[ctx.guild.id]) > 0 or main.bot_loop(ctx.guild.id):
             # get the first url and
             # remove the selected element as you are currently playing it
-            if not vc.is_playing():
+            vc = nextcord.utils.get(main.bot.voice_clients, guild=ctx.guild)
+            if vc is not None and not vc.is_playing():
                 if main.bot_shuffle(ctx.guild.id):
-                    a = random.choice(main.bot.music_queue[ctx.guild.id])
-                    m_url = a[0]['source']
-                    if main.bot_announce(ctx.guild.id):
-                        self.announce_song(ctx, a)
-                    main.bot.playing[ctx.guild.id] = a
-                    main.bot.music_queue[ctx.guild.id].remove(a)
+                    if main.bot_loop(ctx.guild.id):
+                        m_url = main.bot.playing[ctx.guild.id][0]['source']
+                    else:
+                        a = random.choice(main.bot.music_queue[ctx.guild.id])
+                        m_url = a[0]['source']
+                        main.bot.playing[ctx.guild.id] = a
+                        main.bot.music_queue[ctx.guild.id].remove(a)
                 else:
-                    m_url = main.bot.music_queue[ctx.guild.id][0][0]['source']
-                    if main.bot_announce(ctx.guild.id):
-                        self.announce_song(ctx, main.bot.music_queue[ctx.guild.id][0])
-                    main.bot.playing[ctx.guild.id] = main.bot.music_queue[ctx.guild.id][0]
-                    main.bot.music_queue[ctx.guild.id].pop(0)
-                if vc.is_connected:
-                    vc.play(nextcord.FFmpegPCMAudio(before_options='-reconnect 1 -reconnect_streamed 1 '
-                                                                   '-reconnect_delay_max 5',
-                                                    source=m_url), after=lambda e: self.play_next(ctx, vc))
+                    if main.bot_loop(ctx.guild.id):
+                        m_url = main.bot.playing[ctx.guild.id][0]['source']
+                    else:
+                        m_url = main.bot.music_queue[ctx.guild.id][0][0]['source']
+                        main.bot.playing[ctx.guild.id] = main.bot.music_queue[ctx.guild.id][0]
+                        main.bot.music_queue[ctx.guild.id].pop(0)
+                if main.bot_announce(ctx.guild.id):
+                    self.announce_song(ctx, main.bot.playing[ctx.guild.id])
+                vc.play(nextcord.FFmpegPCMAudio(before_options='-reconnect 1 '
+                                                               '-reconnect_streamed 1 '
+                                                               '-reconnect_delay_max 5',
+                                                source=m_url), after=lambda e: self.play_next(ctx))
 
     # infinite loop checking
     async def play_music(self, ctx, vc):
@@ -93,9 +98,10 @@ class Play(commands.Cog):
             main.bot.playing[ctx.guild.id] = main.bot.music_queue[ctx.guild.id][0]
             main.bot.music_queue[ctx.guild.id].pop(0)
             if vc.is_connected():
-                vc.play(nextcord.FFmpegPCMAudio(before_options='-reconnect 1 -reconnect_streamed 1 '
+                vc.play(nextcord.FFmpegPCMAudio(before_options='-reconnect 1 '
+                                                               '-reconnect_streamed 1 '
                                                                '-reconnect_delay_max 5',
-                                                source=m_url), after=lambda e: self.play_next(ctx, vc))
+                                                source=m_url), after=lambda e: self.play_next(ctx))
 
     @nextcord.slash_command(name="play",
                             description="Play a song",
