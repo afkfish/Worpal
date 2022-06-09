@@ -84,63 +84,63 @@ class Help(commands.Cog):
                 embed.title = "Work in progress"
         await ctx.edit_original_message(embed=embed)
 
-    @nextcord.slash_command(name="help",description="Get info on commands.",guild_ids=main.bot.guild_ids)
+    @nextcord.slash_command(name="help", description="Get info on commands.", guild_ids=main.bot.guild_ids)
     async def help(self, ctx):
         pass
 
-    @help.subcommand(name="play",description="play command")
+    @help.subcommand(name="play", description="play command")
     async def help_play(self, ctx):
         await self.help_embed(ctx=ctx, command="play")
 
-    @help.subcommand(name="spotify",description="spotify command")
+    @help.subcommand(name="spotify", description="spotify command")
     async def help_spotify(self, ctx):
         await self.help_embed(ctx=ctx, command="spotify")
 
-    @help.subcommand(name="queue",description="queue command")
+    @help.subcommand(name="queue", description="queue command")
     async def help_queue(self, ctx):
         await self.help_embed(ctx=ctx, command="queue")
 
-    @help.subcommand(name="skip",description="skip command")
+    @help.subcommand(name="skip", description="skip command")
     async def help_skip(self, ctx):
         await self.help_embed(ctx=ctx, command="skip")
 
-    @help.subcommand(name="pause",description="pause command")
+    @help.subcommand(name="pause", description="pause command")
     async def help_pause(self, ctx):
         await self.help_embed(ctx=ctx, command="pause")
 
-    @help.subcommand(name="resume",description="resume command")
+    @help.subcommand(name="resume", description="resume command")
     async def help_resume(self, ctx):
         await self.help_embed(ctx=ctx, command="resume")
 
-    @help.subcommand(name="stop",description="stop command")
+    @help.subcommand(name="stop", description="stop command")
     async def help_stop(self, ctx):
         await self.help_embed(ctx=ctx, command="stop")
 
-    @help.subcommand(name="leave",description="leave command")
+    @help.subcommand(name="leave", description="leave command")
     async def help_leave(self, ctx):
         await self.help_embed(ctx=ctx, command="leave")
 
-    @help.subcommand(name="clear_dumplicates",description="clear duplicates command")
+    @help.subcommand(name="clear_dumplicates", description="clear duplicates command")
     async def help_clear_d(self, ctx):
         await self.help_embed(ctx=ctx, command="clear duplicates")
 
-    @help.subcommand(name="clear_all",description="clear all command")
+    @help.subcommand(name="clear_all", description="clear all command")
     async def help_clear_a(self, ctx):
         await self.help_embed(ctx=ctx, command="clear all")
 
-    @help.subcommand(name="np",description="np command")
+    @help.subcommand(name="np", description="np command")
     async def help_np(self, ctx):
         await self.help_embed(ctx=ctx, command="np")
 
-    @help.subcommand(name="subtitle",description="subtitle command")
+    @help.subcommand(name="subtitle", description="subtitle command")
     async def help_subtitle(self, ctx):
         await self.help_embed(ctx=ctx, command="subtitle")
 
-    @help.subcommand(name="lyrics",description="lyrics command")
+    @help.subcommand(name="lyrics", description="lyrics command")
     async def help_lyrics(self, ctx):
         await self.help_embed(ctx=ctx, command="lyrics")
 
-    @help.subcommand(name="ping",description="ping command")
+    @help.subcommand(name="ping", description="ping command")
     async def help_ping(self, ctx):
         await self.help_embed(ctx=ctx, command="ping")
 

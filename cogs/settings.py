@@ -25,6 +25,11 @@ async def settings_embed(ctx):
                         "True :white_check_mark:" if main.bot_announce(ctx.guild.id) else "False :x:"
                     ),
                     inline=True)
+    embed.add_field(name="Loop songs :repeat:",
+                    value="The current song will loop while the setting is true\n\nEnabled: {}".format(
+                        "True :white_check_mark:" if main.bot_loop(ctx.guild.id) else "False :x:"
+                    ),
+                    inline=True)
     await ctx.edit_original_message(embed=embed)
 
 
@@ -43,7 +48,6 @@ class Settings(commands.Cog):
                                                                           description="boolean option",
                                                                           required=True)):
         await ctx.response.send_message('Bot is thinking!')
-        print(shuffle_play)
         with open('./settings/settings.json', 'r') as f:
             data = json.load(f)
         if bool(shuffle_play):
@@ -65,6 +69,19 @@ class Settings(commands.Cog):
             data[str(ctx.guild.id)]['announce'] = True
         elif not bool(announce_songs):
             data[str(ctx.guild.id)]['announce'] = False
+        with open('./settings/settings.json', 'w') as f:
+            json.dump(data, f, indent=4)
+        await settings_embed(ctx)
+
+    @settings_.subcommand(name="loop", description="Turns on/off loop")
+    async def settigs_loop(self, ctx, loop: str = SlashOption(name="loop", description="boolean option", required=True)):
+        await ctx.response.send_message('Bot is thinking!')
+        with open('./settings/settings.json', 'r') as f:
+            data = json.load(f)
+        if bool(loop):
+            data[str(ctx.guild.id)]['loop'] = True
+        elif not bool(loop):
+            data[str(ctx.guild.id)]['loop'] = False
         with open('./settings/settings.json', 'w') as f:
             json.dump(data, f, indent=4)
         await settings_embed(ctx)
