@@ -55,6 +55,7 @@ class Navigation(commands.Cog):
         voice = nextcord.utils.get(main.bot.voice_clients, guild=ctx.guild)
         embed = nextcord.Embed(title="Stopped :stop_button:")
         await ctx.edit_original_message(embed=embed)
+        main.bot.music_queue[ctx.guild.id] = []
         voice.stop()
 
     @nextcord.slash_command(name="leave",

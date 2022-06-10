@@ -16,21 +16,23 @@ class Help(commands.Cog):
         match command:
             case "play":
                 embed.title = "Play :arrow_forward:"
-                embed.add_field(name="Usage:", value="The play command accepts words and youtube links as an argument. "
+                embed.add_field(name="Usage:", value="The play command accepts words, youtube links, spotify links to "
+                                                     "songs and playlists (only the first 10 song will be added from "
+                                                     "them to the queue) as an argument. "
                                                      "The user must be in a voice channel when executing the command! "
                                                      "The bot cannot play livestreams and videos that are age "
                                                      "restricted! "
                                                      "The bot will search for a video named as the argument or the "
-                                                     "link and "
+                                                     "link, or in case of a spotify link then on spotify and "
                                                      "try to stream it into the voice channel where the user is "
                                                      "present.")
-            case "spotify":
-                embed.title = "Spotify <:spotify:944554099175727124>"
-                embed.add_field(name="Usage:", value="The spotify command accepts words and spotify song links. "
-                                                     "The user must be in a voice channel in order to use the command."
-                                                     "The bot will search in the spotify API to find the requested "
-                                                     "song and tries to play it from youtube if it is present on the "
-                                                     "platform.")
+            # case "spotify":
+            #     embed.title = "Spotify <:spotify:944554099175727124>"
+            #     embed.add_field(name="Usage:", value="The spotify command accepts words and spotify song links. "
+            #                                          "The user must be in a voice channel in order to use the command."
+            #                                          "The bot will search in the spotify API to find the requested "
+            #                                          "song and tries to play it from YouTube if it is present on the "
+            #                                          "platform.")
             case "queue":
                 embed.title = "Queue"
                 embed.add_field(name="Usage:", value="The queue command sends an embed displaying the previously "
@@ -92,9 +94,9 @@ class Help(commands.Cog):
     async def help_play(self, ctx):
         await self.help_embed(ctx=ctx, command="play")
 
-    @help.subcommand(name="spotify", description="spotify command")
-    async def help_spotify(self, ctx):
-        await self.help_embed(ctx=ctx, command="spotify")
+    # @help.subcommand(name="spotify", description="spotify command")
+    # async def help_spotify(self, ctx):
+    #     await self.help_embed(ctx=ctx, command="spotify")
 
     @help.subcommand(name="queue", description="queue command")
     async def help_queue(self, ctx):

@@ -12,7 +12,6 @@ modules = [
     'navigation',
     'seek',
     'settings',
-    'spotify',
     'help'
 ]
 
@@ -37,6 +36,7 @@ def bot_loop(guildid):
 
 bot.playing = {}
 bot.music_queue = {}
+bot.query = {}
 bot.guild_ids = []
 
 
@@ -50,6 +50,7 @@ async def on_ready():
             data.update({str(guild.id): {'announce': False, 'shuffle': False, 'loop': False}})
         bot.guild_ids.append(guild.id)
         bot.music_queue[guild.id] = []
+        bot.query[guild.id] = []
         bot.playing[guild.id] = ''
     with open('./settings/settings.json', 'w') as f:
         json.dump(data, f, indent=4)
@@ -62,6 +63,7 @@ async def on_guid_join(guild):
     data.update({str(guild.id): {'announce': False, 'shuffle': False, 'loop': False}})
     bot.guild_ids.append(guild.id)
     bot.music_queue[guild.id] = []
+    bot.query[guild.id] = []
     bot.playing[guild.id] = ''
     with open('./settings/settings.json', 'w') as f:
         json.dump(data, f, indent=4)

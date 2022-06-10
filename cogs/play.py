@@ -2,8 +2,10 @@ import nextcord
 from nextcord import SlashOption
 import random
 import json
+import re
 import datetime as dt
 # import youtube_transcript_api
+from utils.spotify_api_request import SpotifyApi
 from utils.genius_api_request import GeniusApi
 from utils.lyrics_scrape import get_lyrics
 from youtube_dl import YoutubeDL
@@ -31,6 +33,13 @@ def search_yt(item):
 
     return {'source': info['formats'][0]['url'], 'title': info['title'], 'thumbnail': info['thumbnail'],
             'duration': info['duration'], 'id': info['id']}
+
+
+async def process_query(ctx, vc):
+    for entry in main.bot.query[ctx.guild.id]:
+        track = search_yt(entry)
+        if track:
+            main.bot.music_queue[ctx.guild.id].append([track, vc])
 
 
 class Play(commands.Cog):
@@ -110,29 +119,88 @@ class Play(commands.Cog):
                                                        description="the music to be played",
                                                        required=True)):
         await ctx.response.send_message('Bot is thinking!')
-        query = "".join(music)
-        voice = nextcord.utils.get(main.bot.voice_clients, guild=ctx.guild)
-        if ctx.user.voice:
-            voice_channel = ctx.user.voice.channel
-            song = search_yt(query)
-            if not song:
-                await ctx.edit_original_message(content="Could not download the song. Incorrect format try another "
-                                                        "keyword. This could be due to playlist or a livestream "
-                                                        "format.")
+        embed = nextcord.Embed(title="Song added to queue" + f"from Spotify {self.bot.get_emoji(944554099175727124)}"
+                                                             if "spotify" in music else "", color=0x152875)
+        embed.set_author(name="Worpal", icon_url="https://i.imgur.com/Rygy2KWs.jpg")
+        if "open.spotify.com" in music:
+            artists = ""
+            if "/track" in music:
+                # https://open.spotify.com/track/5oKRyAx215xIycigG6NNwt?si=834b843759b84497
+                a = re.search("track/(.*)\?si", music).group(1)
+                song = SpotifyApi().get_by_id(trackid=a)
+                for artist in song['album']['artists']:
+                    artists += "".join("{}, ".format(artist['name']))
+                artists = artists[:-2]
+                embed.set_thumbnail(url=song['album']['images'][0]['url'])
+                embed.add_field(name=f"{song['name']}\n\n",
+                                value=f"{artists}\n{str(dt.timedelta(seconds=round(song['duration_ms'] / 1000, 0)))}")
+                main.bot.query[ctx.guild.id].append(f"{song['album']['name']}\n{artists}")
+            elif "/playlist" in music:
+                a = re.search("playlist/(.*)\?si", music).group(1)
+                playlist = SpotifyApi().get_playlist(playlist_id=a)
+                count = 0
+                for song in playlist['tracks']['items']:
+                    if count != 10:
+                        artists = ""
+                        count += 1
+                        for artist in song['track']['artists']:
+                            artists += "".join(f"{artist['name']}, ")
+                        artists = artists[:-2]
+                        main.bot.query[ctx.guild.id].append(f"{song['track']['name']}\n{artists}")
+                embed.title = f"Playlist added to queue from Spotify {self.bot.get_emoji(944554099175727124)}"
+                embed.set_thumbnail(url=playlist['images'][0]['url'])
+                embed.add_field(name=f"{playlist['name']}\n\n",
+                                value=f"{playlist['owner']['display_name']}\n")
             else:
-                main.bot.music_queue[ctx.guild.id].append([song, voice_channel])
-                embed = nextcord.Embed(title="Song added to queue", color=0x152875)
-                embed.set_author(name="Worpal", icon_url="https://i.imgur.com/Rygy2KWs.jpg")
-                embed.set_thumbnail(url=main.bot.music_queue[ctx.guild.id][-1][0]['thumbnail'])
-                embed.add_field(name=main.bot.music_queue[ctx.guild.id][-1][0]['title'],
-                                value=str(dt.timedelta(
-                                    seconds=int(main.bot.music_queue[ctx.guild.id][-1][0]['duration']))),
-                                inline=True)
-                embed.set_footer(text="Song requested by: " + ctx.user.name)
+                song = SpotifyApi().get_by_name(q=music, limit=1, type_="track")['tracks']['items'][0]
+                for artist in song['artists']:
+                    artists += "".join(f"{artist['name']}, ")
+                artists = artists[:-2]
+                embed.set_thumbnail(url=song['album']['images'][0]['url'])
+                embed.add_field(name=f"{song['name']}\n\n",
+                                value=f"{artists}\n{str(dt.timedelta(seconds=round(song['duration_ms'] / 1000, 0)))}")
+                main.bot.query[ctx.guild.id].append(f"{song['name']}  {artists}")
+            embed.set_footer(text="Song requested by: " + ctx.user.name)
+            voice = nextcord.utils.get(main.bot.voice_clients, guild=ctx.guild)
+            if ctx.user.voice:
+                voice_channel = ctx.user.voice.channel
                 await ctx.edit_original_message(embed=embed)
-                await self.play_music(ctx, voice)
+                track = search_yt(main.bot.query[ctx.guild.id][0])
+                main.bot.query[ctx.guild.id].pop(0)
+                if track is False:
+                    if len(main.bot.query[ctx.guild.id]) > 0:
+                        await process_query(ctx, voice_channel)
+                        await self.play_music(ctx, voice)
+                else:
+                    main.bot.music_queue[ctx.guild.id].append([track, voice_channel])
+                    await self.play_music(ctx, voice)
+                    if len(main.bot.query[ctx.guild.id]) > 0:
+                        await process_query(ctx, voice_channel)
+            else:
+                await ctx.edit_original_message(content="Connect to a voice channel!")
         else:
-            await ctx.edit_original_message(content="Connect to a voice channel!")
+            voice = nextcord.utils.get(main.bot.voice_clients, guild=ctx.guild)
+            if ctx.user.voice:
+                voice_channel = ctx.user.voice.channel
+                song = search_yt(music)
+                if not song:
+                    await ctx.edit_original_message(content="Could not download the song. Incorrect format try another "
+                                                            "keyword. This could be due to playlist or a livestream "
+                                                            "format.")
+                else:
+                    main.bot.music_queue[ctx.guild.id].append([song, voice_channel])
+                    embed = nextcord.Embed(title="Song added to queue", color=0x152875)
+                    embed.set_author(name="Worpal", icon_url="https://i.imgur.com/Rygy2KWs.jpg")
+                    embed.set_thumbnail(url=main.bot.music_queue[ctx.guild.id][-1][0]['thumbnail'])
+                    embed.add_field(name=main.bot.music_queue[ctx.guild.id][-1][0]['title'],
+                                    value=str(dt.timedelta(
+                                        seconds=int(main.bot.music_queue[ctx.guild.id][-1][0]['duration']))),
+                                    inline=True)
+                    embed.set_footer(text="Song requested by: " + ctx.user.name)
+                    await ctx.edit_original_message(embed=embed)
+                    await self.play_music(ctx, voice)
+            else:
+                await ctx.edit_original_message(content="Connect to a voice channel!")
 
     @nextcord.slash_command(name="queue",
                             description="Displays the songs in the queue",
