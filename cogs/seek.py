@@ -41,7 +41,7 @@ class Seek(commands.Cog):
                 voice.play(nextcord.FFmpegPCMAudio(before_options=f'-ss {time} -reconnect 1 -reconnect_streamed 1 '
                                                                   '-reconnect_delay_max 5',
                                                    source=m_url),
-                           after=lambda e: Play(commands.Cog).play_next(ctx, voice))
+                           after=lambda e: Play(commands.Cog).play_next(ctx))
                 # send a message saying the bot is now playing the song
                 await ctx.edit_original_message(
                     content=f'Now playing {main.bot.playing[ctx.guild.id][0]["title"]} from {formatted_time} seconds.')

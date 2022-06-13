@@ -94,23 +94,24 @@ class Play(commands.Cog):
 
     # infinite loop checking
     async def play_music(self, ctx, vc):
-        m_url = main.bot.music_queue[ctx.guild.id][0][0]['source']
-        # try to connect to voice channel if you are not already connected
-        if vc is None:
-            vc = await main.bot.music_queue[ctx.guild.id][0][1].connect()
-        else:
-            await vc.move_to(main.bot.music_queue[ctx.guild.id][0][1])
-        # remove the first element as you are currently playing it
-        if not vc.is_playing():
-            if main.bot_announce(ctx.guild.id):
-                self.announce_song(ctx, main.bot.music_queue[ctx.guild.id][0])
-            main.bot.playing[ctx.guild.id] = main.bot.music_queue[ctx.guild.id][0]
-            main.bot.music_queue[ctx.guild.id].pop(0)
-            if vc.is_connected():
-                vc.play(nextcord.FFmpegPCMAudio(before_options='-reconnect 1 '
-                                                               '-reconnect_streamed 1 '
-                                                               '-reconnect_delay_max 5',
-                                                source=m_url), after=lambda e: self.play_next(ctx))
+        if len(main.bot.music_queue[ctx.guild.id]) > 0:
+            m_url = main.bot.music_queue[ctx.guild.id][0][0]['source']
+            # try to connect to voice channel if you are not already connected
+            if vc is None:
+                vc = await main.bot.music_queue[ctx.guild.id][0][1].connect()
+            else:
+                await vc.move_to(main.bot.music_queue[ctx.guild.id][0][1])
+            # remove the first element as you are currently playing it
+            if not vc.is_playing():
+                if main.bot_announce(ctx.guild.id):
+                    self.announce_song(ctx, main.bot.music_queue[ctx.guild.id][0])
+                main.bot.playing[ctx.guild.id] = main.bot.music_queue[ctx.guild.id][0]
+                main.bot.music_queue[ctx.guild.id].pop(0)
+                if vc.is_connected():
+                    vc.play(nextcord.FFmpegPCMAudio(before_options='-reconnect 1 '
+                                                                   '-reconnect_streamed 1 '
+                                                                   '-reconnect_delay_max 5',
+                                                    source=m_url), after=lambda e: self.play_next(ctx))
 
     @nextcord.slash_command(name="play",
                             description="Play a song",
@@ -119,7 +120,7 @@ class Play(commands.Cog):
                                                        description="the music to be played",
                                                        required=True)):
         await ctx.response.send_message('Bot is thinking!')
-        embed = nextcord.Embed(title="Song added to queue" + f"from Spotify {self.bot.get_emoji(944554099175727124)}"
+        embed = nextcord.Embed(title="Song added to queue" + f"from Spotify {main.bot.get_emoji(944554099175727124)}"
                                                              if "spotify" in music else "", color=0x152875)
         embed.set_author(name="Worpal", icon_url="https://i.imgur.com/Rygy2KWs.jpg")
         if "open.spotify.com" in music:
@@ -134,7 +135,7 @@ class Play(commands.Cog):
                 embed.set_thumbnail(url=song['album']['images'][0]['url'])
                 embed.add_field(name=f"{song['name']}\n\n",
                                 value=f"{artists}\n{str(dt.timedelta(seconds=round(song['duration_ms'] / 1000, 0)))}")
-                main.bot.query[ctx.guild.id].append(f"{song['album']['name']}\n{artists}")
+                main.bot.query[ctx.guild.id].append(f"{song['name']}\t{artists}")
             elif "/playlist" in music:
                 a = re.search("playlist/(.*)\?si", music).group(1)
                 playlist = SpotifyApi().get_playlist(playlist_id=a)
@@ -146,7 +147,7 @@ class Play(commands.Cog):
                         for artist in song['track']['artists']:
                             artists += "".join(f"{artist['name']}, ")
                         artists = artists[:-2]
-                        main.bot.query[ctx.guild.id].append(f"{song['track']['name']}\n{artists}")
+                        main.bot.query[ctx.guild.id].append(f"{song['track']['name']}\t{artists}")
                 embed.title = f"Playlist added to queue from Spotify {self.bot.get_emoji(944554099175727124)}"
                 embed.set_thumbnail(url=playlist['images'][0]['url'])
                 embed.add_field(name=f"{playlist['name']}\n\n",
@@ -159,7 +160,7 @@ class Play(commands.Cog):
                 embed.set_thumbnail(url=song['album']['images'][0]['url'])
                 embed.add_field(name=f"{song['name']}\n\n",
                                 value=f"{artists}\n{str(dt.timedelta(seconds=round(song['duration_ms'] / 1000, 0)))}")
-                main.bot.query[ctx.guild.id].append(f"{song['name']}  {artists}")
+                main.bot.query[ctx.guild.id].append(f"{song['name']}\t{artists}")
             embed.set_footer(text="Song requested by: " + ctx.user.name)
             voice = nextcord.utils.get(main.bot.voice_clients, guild=ctx.guild)
             if ctx.user.voice:
@@ -296,7 +297,7 @@ class Play(commands.Cog):
                             description="test",
                             guild_ids=main.bot.guild_ids)
     async def lyrics(self, ctx):
-        await ctx.response.send_message('Bot is thinking!', delete_after=1)
+        await ctx.response.send_message('Bot is thinking!')
         embed = nextcord.Embed(title="Song Lyrics:", color=0x152875)
         embed.set_author(name="Worpal", icon_url="https://i.imgur.com/Rygy2KWs.jpg")
         try:
@@ -314,10 +315,10 @@ class Play(commands.Cog):
             else:
                 embed.add_field(name=song['title'], value=lyrics)
                 embed.set_thumbnail(url=main.bot.playing[ctx.guild.id][0]['thumbnail'])
-                await ctx.response.send_message(embed=embed)
+                await ctx.edit_original_message(embed=embed)
         except IndexError as ex:
             print(f"{type(ex).__name__} {ex}")
-            await ctx.response.send_message(f"Error: {ex}")
+            await ctx.edit_original_message(content=f"Error: {ex}")
 
 
 def setup(bot):
