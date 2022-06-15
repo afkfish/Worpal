@@ -38,6 +38,7 @@ def search_yt(item):
 async def process_query(ctx, vc):
     for entry in main.bot.query[ctx.guild.id]:
         track = search_yt(entry)
+        main.bot.query[ctx.guild.id].pop(0)
         if track:
             main.bot.music_queue[ctx.guild.id].append([track, vc])
 
