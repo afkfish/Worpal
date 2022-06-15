@@ -3,7 +3,8 @@ name: Docker Image CI
 on:
   push:
     branches: [ "main" ]
-
+env: 
+      LIBSODIUM_MAKE_ARGS: -j4
 jobs:
   docker:
     runs-on: ubuntu-latest
