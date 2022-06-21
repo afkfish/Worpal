@@ -1,4 +1,6 @@
 import json
+
+import nextcord
 from nextcord.ext import commands
 
 bot = commands.Bot()
@@ -46,7 +48,7 @@ async def on_ready():
     with open('./settings/settings.json', 'r') as f:
         data = json.load(f)
     for guild in bot.guilds:
-        if guild.id not in data:
+        if str(guild.id) not in data:
             data.update({str(guild.id): {'announce': False, 'shuffle': False, 'loop': False}})
         bot.guild_ids.append(guild.id)
         bot.music_queue[guild.id] = []
@@ -67,6 +69,17 @@ async def on_guid_join(guild):
     bot.playing[guild.id] = ''
     with open('./settings/settings.json', 'w') as f:
         json.dump(data, f, indent=4)
+
+
+@bot.event
+async def on_voice_state_update(member, before, after):
+    voice = nextcord.utils.get(bot.voice_clients, guild=member.guild)
+    if voice is not None and before.channel is not None:
+        if before.channel.id == voice.channel.id:
+            if len(voice.channel.members) == 1:
+                bot.music_queue[member.guild.id] = []
+                voice.stop()
+                await voice.disconnect()
 
 
 @bot.slash_command(description="Load cogs",

@@ -4,6 +4,8 @@ import json
 import main
 from nextcord.ext import commands
 
+bool_str = ["1", "true", "yes", "y", "t"]
+
 
 async def settings_embed(ctx):
     embed = nextcord.Embed(title="Settings",
@@ -50,9 +52,9 @@ class Settings(commands.Cog):
         await ctx.response.send_message('Bot is thinking!')
         with open('./settings/settings.json', 'r') as f:
             data = json.load(f)
-        if bool(shuffle_play):
+        if shuffle_play.lower() in bool_str:
             data[str(ctx.guild.id)]['shuffle'] = True
-        elif not bool(shuffle_play):
+        else:
             data[str(ctx.guild.id)]['shuffle'] = False
         with open('./settings/settings.json', 'w') as f:
             json.dump(data, f, indent=4)
@@ -65,22 +67,24 @@ class Settings(commands.Cog):
         await ctx.response.send_message('Bot is thinking!')
         with open('./settings/settings.json', 'r') as f:
             data = json.load(f)
-        if bool(announce_songs):
+        if announce_songs.lower() in bool_str:
             data[str(ctx.guild.id)]['announce'] = True
-        elif not bool(announce_songs):
+        else:
             data[str(ctx.guild.id)]['announce'] = False
         with open('./settings/settings.json', 'w') as f:
             json.dump(data, f, indent=4)
         await settings_embed(ctx)
 
     @settings_.subcommand(name="loop", description="Turns on/off loop")
-    async def settigs_loop(self, ctx, loop: str = SlashOption(name="loop", description="boolean option", required=True)):
+    async def settigs_loop(self, ctx, loop: str = SlashOption(name="loop",
+                                                              description="boolean option",
+                                                              required=True)):
         await ctx.response.send_message('Bot is thinking!')
         with open('./settings/settings.json', 'r') as f:
             data = json.load(f)
-        if bool(loop):
+        if loop.lower() in bool_str:
             data[str(ctx.guild.id)]['loop'] = True
-        elif not bool(loop):
+        else:
             data[str(ctx.guild.id)]['loop'] = False
         with open('./settings/settings.json', 'w') as f:
             json.dump(data, f, indent=4)

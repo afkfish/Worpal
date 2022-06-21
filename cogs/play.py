@@ -1,3 +1,5 @@
+import datetime
+
 import nextcord
 from nextcord import SlashOption
 import random
@@ -60,10 +62,16 @@ class Play(commands.Cog):
         embed = nextcord.Embed(title="Currently playing:", color=0x152875)
         embed.set_author(name="Worpal", icon_url="https://i.imgur.com/Rygy2KWs.jpg")
         embed.set_thumbnail(url=a[0]['thumbnail'])
-        embed.add_field(name=a[0]['title'],
-                        value=str(dt.timedelta(seconds=int(a[0]['duration']))),
-                        inline=True)
-        main.bot.loop.create_task(ctx.edit_original_message(embed=embed))
+        if len(main.bot.playing[ctx.guild.id]) > 2:
+            timedelta = (datetime.datetime.utcnow() - main.bot.playing[ctx.guild.id][-1]).total_seconds()
+            rounded = int(timedelta)
+            playtime = datetime.timedelta(seconds=rounded)
+            embed.add_field(name=a[0]['title'], value=f"Currently at:\n{playtime}", inline=True)
+            embed.set_footer(text=str(dt.timedelta(seconds=int(a[0]['duration']))))
+        else:
+            embed.add_field(name=a[0]['title'], value=f"Lenght:\n{str(dt.timedelta(seconds=int(a[0]['duration'])))}",
+                            inline=True)
+        main.bot.loop.create_task(ctx.send(embed=embed))
 
     def play_next(self, ctx):
         if len(main.bot.music_queue[ctx.guild.id]) > 0 or main.bot_loop(ctx.guild.id):
@@ -92,6 +100,7 @@ class Play(commands.Cog):
                                                                '-reconnect_streamed 1 '
                                                                '-reconnect_delay_max 5',
                                                 source=m_url), after=lambda e: self.play_next(ctx))
+                main.bot.playing[ctx.guild.id].append(datetime.datetime.utcnow())
 
     # infinite loop checking
     async def play_music(self, ctx, vc):
@@ -113,6 +122,7 @@ class Play(commands.Cog):
                                                                    '-reconnect_streamed 1 '
                                                                    '-reconnect_delay_max 5',
                                                     source=m_url), after=lambda e: self.play_next(ctx))
+                    main.bot.playing[ctx.guild.id].append(datetime.datetime.utcnow())
 
     @nextcord.slash_command(name="play",
                             description="Play a song",
@@ -304,19 +314,20 @@ class Play(commands.Cog):
         try:
             song = GeniusApi().get_song(main.bot.playing[ctx.guild.id][0]['title'])
             lyrics = get_lyrics(song)
-            if len(lyrics) > 1000:
-                ly1 = lyrics[:len(lyrics) // 2]
-                ly2 = lyrics[len(lyrics) // 2:]
-                embed.add_field(name=song['title'], value=ly1)
-                embed2 = nextcord.Embed(color=0x152875)
-                embed2.add_field(name="", value=ly2)
-                embed.set_thumbnail(url=main.bot.playing[ctx.guild.id][0]['thumbnail'])
-                await ctx.response.send_message(embed=embed)
-                await ctx.response.send_message(embed=embed2)
-            else:
-                embed.add_field(name=song['title'], value=lyrics)
-                embed.set_thumbnail(url=main.bot.playing[ctx.guild.id][0]['thumbnail'])
-                await ctx.edit_original_message(embed=embed)
+            ly = []
+            for i in range(round(len(lyrics)/1024)-1):
+                ly.append(lyrics[i:i+1024])
+            embed.add_field(name=song["title"], value=nextcord.embeds.EmptyEmbed)
+            embed.set_thumbnail(url=main.bot.playing[ctx.guild.id][0]['thumbnail'])
+            print(ly)
+            print(len(ly))
+            embeds = [embed]
+            for block in ly:
+                nembed = nextcord.Embed(title=nextcord.embeds.EmptyEmbed, color=0x152875)
+                nembed.add_field(name=nextcord.embeds.EmptyEmbed, value=block)
+                embeds.append(nembed)
+            print(embeds)
+            await ctx.edit_original_message(embeds=embeds[:10])
         except IndexError as ex:
             print(f"{type(ex).__name__} {ex}")
             await ctx.edit_original_message(content=f"Error: {ex}")

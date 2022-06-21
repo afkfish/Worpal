@@ -42,6 +42,7 @@ class Seek(commands.Cog):
                                                                   '-reconnect_delay_max 5',
                                                    source=m_url),
                            after=lambda e: Play(commands.Cog).play_next(ctx))
+                main.bot.playing[ctx.guild.id][-1] = dt.datetime.utcnow() - dt.timedelta(seconds=int(time))
                 # send a message saying the bot is now playing the song
                 await ctx.edit_original_message(
                     content=f'Now playing {main.bot.playing[ctx.guild.id][0]["title"]} from {formatted_time} seconds.')
