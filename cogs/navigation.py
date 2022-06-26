@@ -82,7 +82,7 @@ class Navigation(commands.Cog):
             [res.append(x) for x in main.bot.music_queue[ctx.guild.id] if x not in res]
             main.bot.music_queue[ctx.guild.id] = res
         embed = nextcord.Embed(title="Duplicated songs cleared! :broom:", color=0x152875)
-        embed.set_author(name="Worpal", icon_url="https://i.imgur.com/Rygy2KWs.jpg")
+        embed.set_author(name="Worpal", icon_url=main.icon)
         songs = Play.slist(ctx)
         if songs != "":
             embed.add_field(name="Songs: ", value=songs, inline=True)

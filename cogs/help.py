@@ -12,7 +12,7 @@ class Help(commands.Cog):
     async def help_embed(ctx, command: str):
         await ctx.response.send_message('Bot is thinking!')
         embed = nextcord.Embed(color=0x152875)
-        embed.set_author(name="Worpal", icon_url="https://i.imgur.com/Rygy2KWs.jpg")
+        embed.set_author(name="Worpal", icon_url=main.icon)
         match command:
             case "play":
                 embed.title = "Play :arrow_forward:"
@@ -26,13 +26,6 @@ class Help(commands.Cog):
                                                      "link, or in case of a spotify link then on spotify and "
                                                      "try to stream it into the voice channel where the user is "
                                                      "present.")
-            # case "spotify":
-            #     embed.title = "Spotify <:spotify:944554099175727124>"
-            #     embed.add_field(name="Usage:", value="The spotify command accepts words and spotify song links. "
-            #                                          "The user must be in a voice channel in order to use the command."
-            #                                          "The bot will search in the spotify API to find the requested "
-            #                                          "song and tries to play it from YouTube if it is present on the "
-            #                                          "platform.")
             case "queue":
                 embed.title = "Queue"
                 embed.add_field(name="Usage:", value="The queue command sends an embed displaying the previously "
@@ -50,8 +43,9 @@ class Help(commands.Cog):
                 embed.add_field(name="Usage:", value="The resume command resumes the music if it has been paused.")
             case "stop":
                 embed.title = "Stop :stop_button:"
-                embed.add_field(name="Usage:", value="The stop command stops the media playing. The next song in the "
-                                                     "queue can be played once a new song is added by a play command.")
+                embed.add_field(name="Usage:", value="The stop command stops the media playing and clears the queue. "
+                                                     "The next song in the queue can be played once a new song is "
+                                                     "added by a play command.")
             case "leave":
                 embed.title = "Leave"
                 embed.add_field(name="Usage:", value="The leave command disconnects the bot from the voice channel if "
@@ -68,10 +62,6 @@ class Help(commands.Cog):
                 embed.add_field(name="Usage:", value="The np command sends an embed representing the music that is "
                                                      "currently being played. If the music stopped or skipped but the "
                                                      "queue is empty than the previously played song will be sent.")
-            case "subtitle":
-                embed.title = "Subtitle"
-                embed.add_field(name="Usage:", value="The subtitle command tries to find subtitles for the audio that "
-                                                     "is being played on youtube in english.")
             case "lyrics":
                 embed.title = "Lyrics"
                 embed.add_field(name="Usage:", value="The lyrics command tries to find the song on genius and sends "
@@ -83,7 +73,7 @@ class Help(commands.Cog):
                 embed.add_field(name="Usage:", value="The ping command measures the latency from the server to the "
                                                      "client in miliseconds.")
             case _:
-                embed.title = "Work in progress"
+                pass
         await ctx.edit_original_message(embed=embed)
 
     @nextcord.slash_command(name="help", description="Get info on commands.", guild_ids=main.bot.guild_ids)
@@ -93,10 +83,6 @@ class Help(commands.Cog):
     @help.subcommand(name="play", description="play command")
     async def help_play(self, ctx):
         await self.help_embed(ctx=ctx, command="play")
-
-    # @help.subcommand(name="spotify", description="spotify command")
-    # async def help_spotify(self, ctx):
-    #     await self.help_embed(ctx=ctx, command="spotify")
 
     @help.subcommand(name="queue", description="queue command")
     async def help_queue(self, ctx):

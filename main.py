@@ -5,6 +5,7 @@ from nextcord.ext import commands
 
 bot = commands.Bot()
 bot.remove_command('help')
+icon = "https://i.imgur.com/Rygy2KWs.jpg"
 
 with open("secrets.json", "r") as file:
     application_key = json.load(file)["discord"]["app_key"]
@@ -72,7 +73,7 @@ async def on_guid_join(guild):
 
 
 @bot.event
-async def on_voice_state_update(member, before, after):
+async def on_voice_state_update(member, before):
     voice = nextcord.utils.get(bot.voice_clients, guild=member.guild)
     if voice is not None and before.channel is not None:
         if before.channel.id == voice.channel.id:

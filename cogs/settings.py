@@ -12,7 +12,7 @@ async def settings_embed(ctx):
                            description="The setting related to the bot",
                            color=0x152875)
     embed.set_author(name="Worpal",
-                     icon_url="https://i.imgur.com/Rygy2KWs.jpg")
+                     icon_url=main.icon)
     embed.add_field(name="Prefix",
                     value="Currently the prefix is not changable due to lack of "
                           "knowledge the developer has",
