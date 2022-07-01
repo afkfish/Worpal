@@ -73,7 +73,7 @@ async def on_guid_join(guild):
 
 
 @bot.event
-async def on_voice_state_update(member, before):
+async def on_voice_state_update(member, before, after):
     voice = utils.get(bot.voice_clients, guild=member.guild)
     if voice is not None and before.channel is not None:
         if before.channel.id == voice.channel.id:
