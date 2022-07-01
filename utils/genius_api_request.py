@@ -1,7 +1,7 @@
+import json
 from urllib.parse import urlencode
 
 import requests
-import json
 
 
 class GeniusApi:

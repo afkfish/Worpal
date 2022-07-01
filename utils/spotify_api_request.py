@@ -1,8 +1,8 @@
+import base64
+import json
 from urllib.parse import urlencode
 
 import requests
-import base64
-import json
 
 
 class SpotifyApi:

@@ -1,5 +1,6 @@
-import nextcord
+from nextcord import Embed, slash_command
 from nextcord.ext import commands
+
 import main
 
 
@@ -11,7 +12,7 @@ class Help(commands.Cog):
     @staticmethod
     async def help_embed(ctx, command: str):
         await ctx.response.send_message('Bot is thinking!')
-        embed = nextcord.Embed(color=0x152875)
+        embed = Embed(color=0x152875)
         embed.set_author(name="Worpal", icon_url=main.icon)
         match command:
             case "play":
@@ -76,7 +77,7 @@ class Help(commands.Cog):
                 pass
         await ctx.edit_original_message(embed=embed)
 
-    @nextcord.slash_command(name="help", description="Get info on commands.", guild_ids=main.bot.guild_ids)
+    @slash_command(name="help", description="Get info on commands.", guild_ids=main.bot.guild_ids)
     async def help(self, ctx):
         pass
 

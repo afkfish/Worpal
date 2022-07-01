@@ -1,16 +1,17 @@
-import nextcord
-from nextcord import SlashOption
 import json
-import main
+
+from nextcord import SlashOption, slash_command, Embed
 from nextcord.ext import commands
+
+import main
 
 bool_str = ["1", "true", "yes", "y", "t"]
 
 
 async def settings_embed(ctx):
-    embed = nextcord.Embed(title="Settings",
-                           description="The setting related to the bot",
-                           color=0x152875)
+    embed = Embed(title="Settings",
+                  description="The setting related to the bot",
+                  color=0x152875)
     embed.set_author(name="Worpal",
                      icon_url=main.icon)
     embed.add_field(name="Prefix",
@@ -40,8 +41,8 @@ class Settings(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @nextcord.slash_command(name="settings",
-                            guild_ids=main.bot.guild_ids)
+    @slash_command(name="settings",
+                   guild_ids=main.bot.guild_ids)
     async def settings_(self, ctx):
         pass
 

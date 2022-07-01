@@ -1,6 +1,6 @@
 import json
 
-import nextcord
+from nextcord import utils
 from nextcord.ext import commands
 
 bot = commands.Bot()
@@ -74,7 +74,7 @@ async def on_guid_join(guild):
 
 @bot.event
 async def on_voice_state_update(member, before):
-    voice = nextcord.utils.get(bot.voice_clients, guild=member.guild)
+    voice = utils.get(bot.voice_clients, guild=member.guild)
     if voice is not None and before.channel is not None:
         if before.channel.id == voice.channel.id:
             if len(voice.channel.members) == 1:
