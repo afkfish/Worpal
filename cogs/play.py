@@ -99,7 +99,7 @@ class Play(commands.Cog):
     async def play(self, ctx, music: str = SlashOption(name="music",
                                                        description="the music to be played",
                                                        required=True)):
-        await ctx.response.send_message('Bot is thinking!')
+        await ctx.response.defer()
         if ctx.user.voice:
             embed = Embed(title="Song added to queue" +
                                 f"from Spotify {main.bot.get_emoji(944554099175727124)}" if "spotify" in music else "",
@@ -149,7 +149,7 @@ class Play(commands.Cog):
                 embed.set_footer(text="Song requested by: " + ctx.user.name)
                 voice = utils.get(main.bot.voice_clients, guild=ctx.guild)
                 voice_channel = ctx.user.voice.channel
-                await ctx.edit_original_message(embed=embed)
+                await ctx.followup.send(embed=embed)
                 track = search_yt(main.bot.query[ctx.guild.id][0])
                 main.bot.query[ctx.guild.id].pop(0)
                 if track is False:
@@ -166,7 +166,7 @@ class Play(commands.Cog):
                 voice_channel = ctx.user.voice.channel
                 song = search_yt(music)
                 if not song:
-                    await ctx.edit_original_message(content="Could not download the song. Incorrect format try another "
+                    await ctx.followup.send(content="Could not download the song. Incorrect format try another "
                                                             "keyword. This could be due to playlist or a livestream "
                                                             "format.")
                 else:
@@ -177,16 +177,16 @@ class Play(commands.Cog):
                                         seconds=int(main.bot.music_queue[ctx.guild.id][-1][0]['duration']))),
                                     inline=True)
                     embed.set_footer(text="Song requested by: " + ctx.user.name)
-                    await ctx.edit_original_message(embed=embed)
+                    await ctx.followup.send(embed=embed)
                     await self.play_music(ctx, voice)
         else:
-            await ctx.edit_original_message(content="Connect to a voice channel!")
+            await ctx.followup.send(content="Connect to a voice channel!")
 
     @slash_command(name="queue",
                    description="Displays the songs in the queue",
                    guild_ids=main.bot.guild_ids)
     async def queue(self, ctx):
-        await ctx.response.send_message('Bot is thinking!')
+        await ctx.response.defer()
         embed = Embed(title="Queue", color=0x152875)
         embed.set_author(name="Worpal", icon_url=main.icon)
         songs = slist(ctx)
@@ -194,7 +194,7 @@ class Play(commands.Cog):
             embed.add_field(name="Songs: ", value=songs, inline=True)
         else:
             embed.add_field(name="Songs: ", value="No music in queue", inline=True)
-        await ctx.edit_original_message(embed=embed)
+        await ctx.followup.send(embed=embed)
 
     @slash_command(name="createpl",
                    description="Create playlists",
@@ -251,14 +251,14 @@ class Play(commands.Cog):
                    description="The song that is currently being played",
                    guild_ids=main.bot.guild_ids)
     async def np(self, ctx):
-        await ctx.response.send_message('Bot is thinking!')
+        await ctx.response.defer()
         announce_song(ctx, main.bot.playing[ctx.guild.id])
 
     @slash_command(name="lyrics",
                    description="test",
                    guild_ids=[940575531567546369])  # still in beta and not working properly
     async def lyrics(self, ctx):
-        await ctx.response.send_message('Bot is thinking!')
+        await ctx.response.defer()
         embed = Embed(title="Song Lyrics:", color=0x152875)
         embed.set_author(name="Worpal", icon_url=main.icon)
         try:
@@ -277,10 +277,10 @@ class Play(commands.Cog):
                 nembed.add_field(name=embeds.EmptyEmbed, value=block)
                 embedl.append(nembed)
             print(embedl)
-            await ctx.edit_original_message(embeds=embedl[:10])
+            await ctx.followup.send(embeds=embedl[:10])
         except IndexError as ex:
             print(f"{type(ex).__name__} {ex}")
-            await ctx.edit_original_message(content=f"Error: {ex}")
+            await ctx.followup.send(content=f"Error: {ex}")
 
 
 def setup(bot):

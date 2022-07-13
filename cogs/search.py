@@ -60,20 +60,20 @@ class Search(commands.Cog):
     async def search_(self, ctx, q: str = SlashOption(name="title",
                                                       description="The video to be found.",
                                                       required=True)):
-        await ctx.response.send_message('The bot is thinking...')
+        await ctx.response.defer()
         songs = search_yt(q, True)
-        view = Confirm()
-        embed = Embed(title=f"Search results for {q}", color=0x152875)
-        embed.set_author(name="Worpal", icon_url=main.icon)
-        cropped = [{'source': song['formats'][0]['url'], 'title': song['title'], 'thumbnail': song['thumbnail'],
-                    'duration': song['duration']} for song in songs]
-        if len(cropped) > 0:
+        if songs:
+            view = Confirm()
+            embed = Embed(title=f"Search results for {q}", color=0x152875)
+            embed.set_author(name="Worpal", icon_url=main.icon)
+            cropped = [{'source': song['formats'][0]['url'], 'title': song['title'], 'thumbnail': song['thumbnail'],
+                        'duration': song['duration']} for song in songs]
             a = ""
             i = 0
             for i, entry in enumerate(cropped, i):
-                a += f"{i + 1}. {entry['title']}\n"
+                a += f"{i + 1}. {entry['title']}\n\n"
             embed.add_field(name="Results:", value=a)
-            await ctx.edit_original_message(embed=embed, view=view)
+            await ctx.followup.send(embed=embed, view=view)
             await view.wait()
             if ctx.user.voice:
                 voice = utils.get(main.bot.voice_clients, guild=ctx.guild)
@@ -88,11 +88,13 @@ class Search(commands.Cog):
                                     inline=True)
                     embed.set_footer(text="Song requested by: " + ctx.user.name)
                     await ctx.send(embed=embed)
-                    if not voice.is_playing():
-                        await Play(commands.Cog).play_music(ctx, voice)
+                    await Play(commands.Cog).play_music(ctx, voice)
+
+            else:
+                await ctx.send(content="Connect to a voice channel!", ephemeral=True)
 
         else:
-            await ctx.edit_original_message(content="Error in getting the videos!")
+            await ctx.followup.send(content="Error in getting the videos!")
 
 
 def setup(bot):

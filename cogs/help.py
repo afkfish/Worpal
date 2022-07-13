@@ -11,7 +11,7 @@ class Help(commands.Cog):
 
     @staticmethod
     async def help_embed(ctx, command: str):
-        await ctx.response.send_message('Bot is thinking!')
+        await ctx.response.defer()
         embed = Embed(color=0x152875)
         embed.set_author(name="Worpal", icon_url=main.icon)
         match command:
@@ -75,7 +75,7 @@ class Help(commands.Cog):
                                                      "client in miliseconds.")
             case _:
                 pass
-        await ctx.edit_original_message(embed=embed)
+        await ctx.followup.send(embed=embed)
 
     @slash_command(name="help", description="Get info on commands.", guild_ids=main.bot.guild_ids)
     async def help(self, ctx):
@@ -120,10 +120,6 @@ class Help(commands.Cog):
     @help.subcommand(name="np", description="np command")
     async def help_np(self, ctx):
         await self.help_embed(ctx=ctx, command="np")
-
-    @help.subcommand(name="subtitle", description="subtitle command")
-    async def help_subtitle(self, ctx):
-        await self.help_embed(ctx=ctx, command="subtitle")
 
     @help.subcommand(name="lyrics", description="lyrics command")
     async def help_lyrics(self, ctx):

@@ -87,46 +87,46 @@ async def on_voice_state_update(member, before, after):
 @bot.slash_command(description="Load cogs",
                    guild_ids=[940575531567546369])
 async def load(ctx, cog_):
-    await ctx.send('Bot is thinking!')
+    await ctx.response.defer()
     try:
         bot.load_extension(f'cogs.{cog_}')
-        await ctx.edit_original_message(content="Succefully loaded {}".format(cog_))
+        await ctx.followup.send(content="Succefully loaded {}".format(cog_))
     except Exception as ex:
-        print(f'Failed to load mod {cog_}\n{type(ex).__name__}: {ex}')
-        await ctx.edit_original_message(content=f"Loading {cog_} was unsuccesful"
+        print(f'Failed to load cog {cog_}\n{type(ex).__name__}: {ex}')
+        await ctx.followup.send(content=f"Loading {cog_} was unsuccesful"
                                                 f"\nError: {cog_}\n{type(ex).__name__}: {ex}")
 
 
 @bot.slash_command(description="Unload cogs",
                    guild_ids=[940575531567546369])
 async def unload(ctx, cog_):
-    await ctx.send('Bot is thinking!')
+    await ctx.response.defer()
     try:
         bot.unload_extension(f'cogs.{cog_}')
-        await ctx.edit_original_message(content=f"Succefully unloaded {cog_}")
+        await ctx.followup.send(content=f"Succefully unloaded {cog_}")
     except Exception as ex:
-        print(f'Failed to unload mod {cog_}\n{type(ex).__name__}: {ex}')
-        await ctx.edit_original_message(content=f"Unloading {cog_} was unsuccesful"
+        print(f'Failed to unload cog {cog_}\n{type(ex).__name__}: {ex}')
+        await ctx.followup.send(content=f"Unloading {cog_} was unsuccesful"
                                                 f"\nError: {cog_}\n{type(ex).__name__}: {ex}")
 
 
 @bot.slash_command(description="Reload cogs",
                    guild_ids=[940575531567546369])
 async def reload(ctx, cog_):
-    await ctx.send('Bot is thinking!')
+    await ctx.response.defer()
     try:
         bot.unload_extension(f'cogs.{cog_}')
         bot.load_extension(f'cogs.{cog_}')
-        await ctx.edit_original_message(content=f"Succefully reloaded {cog_}")
+        await ctx.followup.send(content=f"Succefully reloaded {cog_}")
     except Exception as ex:
-        print(f'Failed to reload mod {cog_}\n{type(ex).__name__}: {ex}')
-        await ctx.edit_original_message(content=f"Reloading {cog_} was unsuccesful"
+        print(f'Failed to reload cog {cog_}\n{type(ex).__name__}: {ex}')
+        await ctx.followup.send(content=f"Reloading {cog_} was unsuccesful"
                                                 f"\nError: {cog_}\n{type(ex).__name__}: {ex}")
 
 
 @bot.slash_command(description="Latency test", guild_ids=[940575531567546369])
 async def ping(ctx):
-    await ctx.send(f"Pong! {round(bot.latency * 1000)}ms")
+    await ctx.followup.send(f"Pong! {round(bot.latency * 1000)}ms")
 
 
 for cog in modules:

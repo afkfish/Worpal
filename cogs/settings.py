@@ -33,7 +33,7 @@ async def settings_embed(ctx):
                         "True :white_check_mark:" if main.bot_loop(ctx.guild.id) else "False :x:"
                     ),
                     inline=True)
-    await ctx.edit_original_message(embed=embed)
+    await ctx.followup.send(embed=embed)
 
 
 class Settings(commands.Cog):
@@ -50,7 +50,7 @@ class Settings(commands.Cog):
     async def settings_shuffle(self, ctx, shuffle_play: str = SlashOption(name="shuffle_play",
                                                                           description="boolean option",
                                                                           required=True)):
-        await ctx.response.send_message('Bot is thinking!')
+        await ctx.response.defer()
         with open('./settings/settings.json', 'r') as f:
             data = json.load(f)
         if shuffle_play.lower() in bool_str:
@@ -65,7 +65,7 @@ class Settings(commands.Cog):
     async def settings_announce(self, ctx, announce_songs: str = SlashOption(name="announce_songs",
                                                                              description="boolean option",
                                                                              required=True)):
-        await ctx.response.send_message('Bot is thinking!')
+        await ctx.response.defer()
         with open('./settings/settings.json', 'r') as f:
             data = json.load(f)
         if announce_songs.lower() in bool_str:
@@ -80,7 +80,7 @@ class Settings(commands.Cog):
     async def settigs_loop(self, ctx, loop: str = SlashOption(name="loop",
                                                               description="boolean option",
                                                               required=True)):
-        await ctx.response.send_message('Bot is thinking!')
+        await ctx.response.defer()
         with open('./settings/settings.json', 'r') as f:
             data = json.load(f)
         if loop.lower() in bool_str:

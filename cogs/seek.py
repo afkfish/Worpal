@@ -18,7 +18,7 @@ class Seek(commands.Cog):
                    guild_ids=main.bot.guild_ids)  # async function for command
     async def seek(self, ctx, time):
         # send a message saying that the bot is thinking with a 1-second lifespan
-        await ctx.response.send_message('The bot is thinking...')
+        await ctx.response.defer()
         # get the voice channel if there is one
         voice_channel = ctx.user.voice.channel
         voice = utils.get(main.bot.voice_clients, guild=ctx.guild)
@@ -28,7 +28,7 @@ class Seek(commands.Cog):
             # if there is no voice channel
             if voice_channel is None:
                 # send a message saying you need to be in a voice channel
-                await ctx.edit_original_message(content='You need to be in a voice channel to use this command.')
+                await ctx.followup.send(content='You need to be in a voice channel to use this command.')
             else:
                 # if there is a voice channel and the bot is not in it connect to it
                 if voice == "" or voice is None:
@@ -46,11 +46,11 @@ class Seek(commands.Cog):
                            after=lambda e: Play(commands.Cog).play_next(ctx))
                 main.bot.playing[ctx.guild.id][-1] = dt.datetime.utcnow() - dt.timedelta(seconds=int(time))
                 # send a message saying the bot is now playing the song
-                await ctx.edit_original_message(
+                await ctx.followup.send(
                     content=f'Now playing {main.bot.playing[ctx.guild.id][0]["title"]} from {formatted_time} seconds.')
         else:
             # send a message to play a song in order to seek in it
-            await ctx.edit_original_message(content='You need to play a song before you can seek in it.')
+            await ctx.followup.send(content='You need to play a song before you can seek in it.')
 
 
 # add the cog to the bot
