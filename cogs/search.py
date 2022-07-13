@@ -16,32 +16,37 @@ class Confirm(nextcord.ui.View):
 
     @nextcord.ui.button(label="1", style=nextcord.ButtonStyle.grey)
     async def first(self, button: nextcord.ui.Button, ctx):
-        await ctx.response.send_message("Playing 1.", ephemeral=True)
         self.value = 1
+        button.style = nextcord.ButtonStyle.green
+        await ctx.response.edit_message(view=self)
         self.stop()
 
     @nextcord.ui.button(label="2", style=nextcord.ButtonStyle.grey)
     async def second(self, button: nextcord.ui.Button, ctx):
-        await ctx.response.send_message("Playing 2.", ephemeral=True)
         self.value = 2
+        button.style = nextcord.ButtonStyle.green
+        await ctx.response.edit_message(view=self)
         self.stop()
 
     @nextcord.ui.button(label="3", style=nextcord.ButtonStyle.grey)
     async def third(self, button: nextcord.ui.Button, ctx):
-        await ctx.response.send_message("Playing 3.", ephemeral=True)
         self.value = 3
+        button.style = nextcord.ButtonStyle.green
+        await ctx.response.edit_message(view=self)
         self.stop()
 
     @nextcord.ui.button(label="4", style=nextcord.ButtonStyle.grey)
     async def fourth(self, button: nextcord.ui.Button, ctx):
-        await ctx.response.send_message("Playing 4.", ephemeral=True)
         self.value = 4
+        button.style = nextcord.ButtonStyle.green
+        await ctx.response.edit_message(view=self)
         self.stop()
 
     @nextcord.ui.button(label="5", style=nextcord.ButtonStyle.grey)
     async def fifth(self, button: nextcord.ui.Button, ctx):
-        await ctx.response.send_message("Playing 5.", ephemeral=True)
         self.value = 5
+        button.style = nextcord.ButtonStyle.green
+        await ctx.response.edit_message(view=self)
         self.stop()
 
 
