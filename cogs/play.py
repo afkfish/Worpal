@@ -109,6 +109,7 @@ class Play(commands.Cog):
                 artists = ""
                 if "/track" in music:
                     # https://open.spotify.com/track/5oKRyAx215xIycigG6NNwt?si=834b843759b84497
+                    # https://open.spotify.com/track/2Oz3Tj8RbLBZFW5Adsyzyj?si=ae09611876c44d65
                     a = re.search("track/(.*)\?si", music).group(1)
                     song = SpotifyApi().get_by_id(trackid=a)
                     for artist in song['album']['artists']:
@@ -116,7 +117,8 @@ class Play(commands.Cog):
                     artists = artists[:-2]
                     embed.set_thumbnail(url=song['album']['images'][0]['url'])
                     embed.add_field(name=f"{song['name']}\n\n",
-                                    value=f"{artists}\n{str(dt.timedelta(seconds=round(song['duration_ms'] / 1000, 0)))}")
+                                    value=f"{artists}\n"
+                                          f"{str(dt.timedelta(seconds=round(song['duration_ms'] / 1000, 0)))}")
                     main.bot.query[ctx.guild.id].append(f"{song['name']}\t{artists}")
                 elif "/playlist" in music:
                     a = re.search("playlist/(.*)\?si", music).group(1)
@@ -141,7 +143,8 @@ class Play(commands.Cog):
                     artists = artists[:-2]
                     embed.set_thumbnail(url=song['album']['images'][0]['url'])
                     embed.add_field(name=f"{song['name']}\n\n",
-                                    value=f"{artists}\n{str(dt.timedelta(seconds=round(song['duration_ms'] / 1000, 0)))}")
+                                    value=f"{artists}\n"
+                                          f"{str(dt.timedelta(seconds=round(song['duration_ms'] / 1000, 0)))}")
                     main.bot.query[ctx.guild.id].append(f"{song['name']}\t{artists}")
                 embed.set_footer(text="Song requested by: " + ctx.user.name)
                 voice = utils.get(main.bot.voice_clients, guild=ctx.guild)

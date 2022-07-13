@@ -15,7 +15,8 @@ modules = [
     'navigation',
     'seek',
     'settings',
-    'help'
+    'help',
+    'search'
 ]
 
 
