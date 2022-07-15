@@ -1,7 +1,6 @@
 import datetime as dt
 
-import nextcord
-from nextcord import slash_command, SlashOption, Embed, utils
+from nextcord import slash_command, SlashOption, Embed, utils, ui, ButtonStyle
 from nextcord.ext import commands
 
 import main
@@ -9,43 +8,43 @@ from cogs.play import Play
 from utils.song_info import search_yt
 
 
-class Confirm(nextcord.ui.View):
+class Selector(ui.View):
     def __init__(self):
         super().__init__()
         self.value = None
 
-    @nextcord.ui.button(label="1", style=nextcord.ButtonStyle.grey)
-    async def first(self, button: nextcord.ui.Button, ctx):
+    @ui.button(label="1", style=ButtonStyle.grey)
+    async def first(self, button: ui.Button, ctx):
         self.value = 1
-        button.style = nextcord.ButtonStyle.green
+        button.style = ButtonStyle.green
         await ctx.response.edit_message(view=self)
         self.stop()
 
-    @nextcord.ui.button(label="2", style=nextcord.ButtonStyle.grey)
-    async def second(self, button: nextcord.ui.Button, ctx):
+    @ui.button(label="2", style=ButtonStyle.grey)
+    async def second(self, button: ui.Button, ctx):
         self.value = 2
-        button.style = nextcord.ButtonStyle.green
+        button.style = ButtonStyle.green
         await ctx.response.edit_message(view=self)
         self.stop()
 
-    @nextcord.ui.button(label="3", style=nextcord.ButtonStyle.grey)
-    async def third(self, button: nextcord.ui.Button, ctx):
+    @ui.button(label="3", style=ButtonStyle.grey)
+    async def third(self, button: ui.Button, ctx):
         self.value = 3
-        button.style = nextcord.ButtonStyle.green
+        button.style = ButtonStyle.green
         await ctx.response.edit_message(view=self)
         self.stop()
 
-    @nextcord.ui.button(label="4", style=nextcord.ButtonStyle.grey)
-    async def fourth(self, button: nextcord.ui.Button, ctx):
+    @ui.button(label="4", style=ButtonStyle.grey)
+    async def fourth(self, button: ui.Button, ctx):
         self.value = 4
-        button.style = nextcord.ButtonStyle.green
+        button.style = ButtonStyle.green
         await ctx.response.edit_message(view=self)
         self.stop()
 
-    @nextcord.ui.button(label="5", style=nextcord.ButtonStyle.grey)
-    async def fifth(self, button: nextcord.ui.Button, ctx):
+    @ui.button(label="5", style=ButtonStyle.grey)
+    async def fifth(self, button: ui.Button, ctx):
         self.value = 5
-        button.style = nextcord.ButtonStyle.green
+        button.style = ButtonStyle.green
         await ctx.response.edit_message(view=self)
         self.stop()
 
@@ -63,7 +62,7 @@ class Search(commands.Cog):
         await ctx.response.defer()
         songs = search_yt(q, True)
         if songs:
-            view = Confirm()
+            view = Selector()
             embed = Embed(title=f"Search results for {q}", color=0x152875)
             embed.set_author(name="Worpal", icon_url=main.icon)
             cropped = [{'source': song['formats'][0]['url'], 'title': song['title'], 'thumbnail': song['thumbnail'],

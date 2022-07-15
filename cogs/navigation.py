@@ -18,11 +18,9 @@ class Navigation(commands.Cog):
         voice = utils.get(main.bot.voice_clients, guild=ctx.guild)
         if voice is not None:
             voice.stop()
+            await Play(commands.Cog).play_music(ctx, voice)
             embed = Embed(title="Skipped :next_track:")
             await ctx.followup.send(embed=embed)
-            # try to play next in the queue if it exists
-            if voice.is_playing():
-                await Play(commands.Cog).play_music(ctx, voice)
 
     @slash_command(name="pause",
                    description="Pause the song",
@@ -31,9 +29,9 @@ class Navigation(commands.Cog):
         await ctx.response.defer()
         voice = utils.get(main.bot.voice_clients, guild=ctx.guild)
         if voice.is_playing():
+            voice.pause()
             embed = Embed(title="Paused :pause_button:")
             await ctx.followup.send(embed=embed)
-            voice.pause()
 
     @slash_command(name="resume",
                    description="Resume playing",
@@ -42,9 +40,9 @@ class Navigation(commands.Cog):
         await ctx.response.defer()
         voice = utils.get(main.bot.voice_clients, guild=ctx.guild)
         if voice.is_paused():
+            voice.resume()
             embed = Embed(title="Resumed")
             await ctx.followup.send(embed=embed)
-            voice.resume()
 
     @slash_command(name="stop",
                    description="Stop playing",
@@ -52,10 +50,10 @@ class Navigation(commands.Cog):
     async def stop_(self, ctx):
         await ctx.response.defer()
         voice = utils.get(main.bot.voice_clients, guild=ctx.guild)
+        voice.stop()
+        main.bot.music_queue[ctx.guild.id] = []
         embed = Embed(title="Stopped :stop_button:")
         await ctx.followup.send(embed=embed)
-        main.bot.music_queue[ctx.guild.id] = []
-        voice.stop()
 
     @slash_command(name="leave",
                    description="Leave voice chat",

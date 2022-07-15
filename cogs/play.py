@@ -3,7 +3,8 @@ import json
 import random
 import re
 
-from nextcord import Embed, utils, SlashOption, slash_command, FFmpegPCMAudio, embeds
+import nextcord
+from nextcord import Embed, utils, SlashOption, slash_command, FFmpegPCMAudio, embeds, ui, ButtonStyle
 from nextcord.ext import commands
 
 import main
@@ -30,7 +31,7 @@ def slist(ctx):
     return li
 
 
-def announce_song(ctx, a):
+def announce_song(ctx, a, view=None):
     embed = Embed(title="Currently playing:", color=0x152875)
     embed.set_author(name="Worpal", icon_url=main.icon)
     embed.set_thumbnail(url=a[0]['thumbnail'])
@@ -43,7 +44,55 @@ def announce_song(ctx, a):
     else:
         embed.add_field(name=a[0]['title'], value=f"Lenght:\n{str(dt.timedelta(seconds=int(a[0]['duration'])))}",
                         inline=True)
-    main.bot.loop.create_task(ctx.send(embed=embed))
+    if view is not None:
+        main.bot.loop.create_task(ctx.followup.send(embed=embed, view=view))
+    else:
+        main.bot.loop.create_task(ctx.followup.send(embed=embed))
+
+
+class Navigation(ui.View):
+    def __init__(self):
+        super().__init__()
+
+    @ui.button(label=":arrows_counterclockwise:", style=ButtonStyle.red, disabled=True)
+    async def replay(self, button: ui.Button, ctx):
+        self.stop()
+        button.style = ButtonStyle.green
+        await ctx.response.edit_message(view=self)
+
+    @ui.button(label=":arrow_forward:", style=ButtonStyle.grey)
+    async def resume(self, button: ui.Button, ctx):
+        self.stop()
+        button.style = ButtonStyle.green
+        await ctx.response.edit_message(view=self)
+        voice = utils.get(main.bot.voice_clients, guild=ctx.guild)
+        if voice.is_paused():
+            voice.resume()
+            embed = Embed(title="Resumed :arrow_forward:")
+            await ctx.send(embed=embed)
+
+    @ui.button(label=":pause_button:", style=ButtonStyle.grey)
+    async def pause(self, button: ui.Button, ctx):
+        self.stop()
+        button.style = ButtonStyle.green
+        await ctx.response.edit_message(view=self)
+        voice = utils.get(main.bot.voice_clients, guild=ctx.guild)
+        if voice.is_playing():
+            voice.pause()
+            embed = Embed(title="Paused :pause_button:")
+            await ctx.send(embed=embed)
+
+    @ui.button(label="\:next_track:", style=ButtonStyle.grey)
+    async def skip(self, button: ui.Button, ctx):
+        self.stop()
+        button.style = ButtonStyle.green
+        await ctx.response.edit_message(view=self)
+        voice = utils.get(main.bot.voice_clients, guild=ctx.guild)
+        if voice is not None:
+            voice.stop()
+            await Play(commands.Cog).play_music(ctx, voice)
+            embed = Embed(title="Skipped :next_track:")
+            await ctx.send(embed=embed)
 
 
 class Play(commands.Cog):
@@ -180,7 +229,7 @@ class Play(commands.Cog):
                     await ctx.followup.send(embed=embed)
                     await self.play_music(ctx, voice)
         else:
-            await ctx.followup.send(content="Connect to a voice channel!")
+            await ctx.followup.send(content="Connect to a voice channel!", ephemeral=True)
 
     @slash_command(name="queue",
                    description="Displays the songs in the queue",
@@ -252,7 +301,13 @@ class Play(commands.Cog):
                    guild_ids=main.bot.guild_ids)
     async def np(self, ctx):
         await ctx.response.defer()
-        announce_song(ctx, main.bot.playing[ctx.guild.id])
+        if len(main.bot.playing[ctx.guild.id]) > 0:
+            view = Navigation()
+            announce_song(ctx, main.bot.playing[ctx.guild.id], view)
+            await view.wait()
+
+        else:
+            await ctx.followup.send(content="No song has been played yet!", ephemeral=True)
 
     @slash_command(name="lyrics",
                    description="test",

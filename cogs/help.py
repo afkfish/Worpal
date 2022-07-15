@@ -121,9 +121,9 @@ class Help(commands.Cog):
     async def help_np(self, ctx):
         await self.help_embed(ctx=ctx, command="np")
 
-    @help.subcommand(name="lyrics", description="lyrics command")
-    async def help_lyrics(self, ctx):
-        await self.help_embed(ctx=ctx, command="lyrics")
+    # @help.subcommand(name="lyrics", description="lyrics command")
+    # async def help_lyrics(self, ctx):
+    #     await self.help_embed(ctx=ctx, command="lyrics")
 
     @help.subcommand(name="ping", description="ping command")
     async def help_ping(self, ctx):
