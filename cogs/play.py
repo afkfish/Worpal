@@ -151,7 +151,7 @@ class Play(commands.Cog):
         await ctx.response.defer()
         if ctx.user.voice:
             embed = Embed(title="Song added to queue" +
-                                f"from Spotify {main.bot.get_emoji(944554099175727124)}" if "spotify" in music else "",
+                                f" from Spotify {main.bot.get_emoji(944554099175727124)}" if "spotify" in music else "",
                           color=0x152875)
             embed.set_author(name="Worpal", icon_url=main.icon)
             if "open.spotify.com" in music:
@@ -216,8 +216,8 @@ class Play(commands.Cog):
                 song = search_yt(music)
                 if not song:
                     await ctx.followup.send(content="Could not download the song. Incorrect format try another "
-                                                            "keyword. This could be due to playlist or a livestream "
-                                                            "format.")
+                                                    "keyword. This could be due to playlist or a livestream "
+                                                    "format.")
                 else:
                     main.bot.music_queue[ctx.guild.id].append([song, voice_channel])
                     embed.set_thumbnail(url=main.bot.music_queue[ctx.guild.id][-1][0]['thumbnail'])
