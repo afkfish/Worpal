@@ -53,13 +53,13 @@ class Navigation(ui.View):
 	def __init__(self):
 		super().__init__()
 
-	@ui.button(label=":arrows_counterclockwise:", style=ButtonStyle.red, disabled=True)
+	@ui.button(emoji="🔁", style=ButtonStyle.red, disabled=True)
 	async def replay(self, button: ui.Button, ctx):
 		self.stop()
 		button.style = ButtonStyle.green
 		await ctx.response.edit_message(view=self)
 
-	@ui.button(label=":arrow_forward:", style=ButtonStyle.grey)
+	@ui.button(emoji="▶️", style=ButtonStyle.grey)
 	async def resume(self, button: ui.Button, ctx):
 		self.stop()
 		button.style = ButtonStyle.green
@@ -70,7 +70,7 @@ class Navigation(ui.View):
 			embed = Embed(title="Resumed :arrow_forward:")
 			await ctx.send(embed=embed)
 
-	@ui.button(label=":pause_button:", style=ButtonStyle.grey)
+	@ui.button(emoji="⏸", style=ButtonStyle.grey)
 	async def pause(self, button: ui.Button, ctx):
 		self.stop()
 		button.style = ButtonStyle.green
@@ -81,7 +81,7 @@ class Navigation(ui.View):
 			embed = Embed(title="Paused :pause_button:")
 			await ctx.send(embed=embed)
 
-	@ui.button(label=":next_track:", style=ButtonStyle.grey)
+	@ui.button(emoji="⏭", style=ButtonStyle.grey)
 	async def skip(self, button: ui.Button, ctx):
 		self.stop()
 		button.style = ButtonStyle.green
