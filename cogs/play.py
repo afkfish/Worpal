@@ -51,17 +51,15 @@ def announce_song(ctx, a, view=None):
 
 class Navigation(ui.View):
 	def __init__(self):
-		super().__init__()
+		super().__init__(timeout=10)
 
 	@ui.button(emoji="🔁", style=ButtonStyle.red, disabled=True)
 	async def replay(self, button: ui.Button, ctx):
-		self.stop()
 		button.style = ButtonStyle.green
 		await ctx.response.edit_message(view=self)
 
 	@ui.button(emoji="▶️", style=ButtonStyle.grey)
 	async def resume(self, button: ui.Button, ctx):
-		self.stop()
 		button.style = ButtonStyle.green
 		await ctx.response.edit_message(view=self)
 		voice = utils.get(main.bot.voice_clients, guild=ctx.guild)
@@ -72,7 +70,6 @@ class Navigation(ui.View):
 
 	@ui.button(emoji="⏸", style=ButtonStyle.grey)
 	async def pause(self, button: ui.Button, ctx):
-		self.stop()
 		button.style = ButtonStyle.green
 		await ctx.response.edit_message(view=self)
 		voice = utils.get(main.bot.voice_clients, guild=ctx.guild)
@@ -83,7 +80,6 @@ class Navigation(ui.View):
 
 	@ui.button(emoji="⏭", style=ButtonStyle.grey)
 	async def skip(self, button: ui.Button, ctx):
-		self.stop()
 		button.style = ButtonStyle.green
 		await ctx.response.edit_message(view=self)
 		voice = utils.get(main.bot.voice_clients, guild=ctx.guild)
@@ -150,7 +146,7 @@ class Play(commands.Cog):
 		await ctx.response.defer()
 		if ctx.user.voice:
 			embed = Embed(title="Song added to queue" +
-								f" from Spotify {main.bot.get_emoji(944554099175727124)}" if "spotify" in music else "",
+								(f" from Spotify {main.bot.get_emoji(944554099175727124)}" if "spotify" in music else ""),
 						  color=0x152875)
 			embed.set_author(name="Worpal", icon_url=main.icon)
 			if "open.spotify.com" in music:
