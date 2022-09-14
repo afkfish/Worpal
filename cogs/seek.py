@@ -33,7 +33,7 @@ class Seek(commands.Cog):
 				if voice == "" or voice is None:
 					voice = await main.bot.playing[ctx.guild.id][1].connect()
 
-				else:
+				elif voice.channel != main.bot.playing[ctx.guild.id][0][1]:
 					# move the bot to the voice
 					await voice.move_to(main.bot.playing[ctx.guild.id][1])
 				formatted_time = dt.timedelta(seconds=int(time))
