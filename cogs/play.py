@@ -118,12 +118,13 @@ class Play(commands.Cog):
 									   source=m_url), after=self.play_next(ctx))
 				main.bot.playing[ctx.guild.id].append(dt.datetime.utcnow())
 
-	async def play_music(self, ctx, vc):
+	async def play_music(self, ctx):
 		if len(main.bot.music_queue[ctx.guild.id]) > 0:
 			m_url = main.bot.music_queue[ctx.guild.id][0][0]['source']
+			vc = utils.find(lambda vc: vc.guild.id == ctx.guild.id, main.bot.voice_clients)
 			if vc is None:
 				vc = await main.bot.music_queue[ctx.guild.id][0][1].connect()
-			else:
+			elif vc.channel != main.bot.music_queue[ctx.guild.id][0][1]:
 				await vc.move_to(main.bot.music_queue[ctx.guild.id][0][1])
 			if not vc.is_playing():
 				main.bot.playing[ctx.guild.id] = main.bot.music_queue[ctx.guild.id][0]
@@ -191,7 +192,6 @@ class Play(commands.Cog):
 										  f"{str(dt.timedelta(seconds=round(song['duration_ms'] / 1000, 0)))}")
 					main.bot.query[ctx.guild.id].append(f"{song['name']}\t{artists}")
 				embed.set_footer(text="Song requested by: " + ctx.user.name)
-				voice = utils.get(main.bot.voice_clients, guild=ctx.guild)
 				voice_channel = ctx.user.voice.channel
 				await ctx.followup.send(embed=embed)
 				track = search_yt(main.bot.query[ctx.guild.id][0])
@@ -199,14 +199,13 @@ class Play(commands.Cog):
 				if track is False:
 					if len(main.bot.query[ctx.guild.id]) > 0:
 						await process_query(ctx, voice_channel)
-						await self.play_music(ctx, voice)
+						await self.play_music(ctx)
 				else:
 					main.bot.music_queue[ctx.guild.id].append([track, voice_channel])
-					await self.play_music(ctx, voice)
+					await self.play_music(ctx)
 					if len(main.bot.query[ctx.guild.id]) > 0:
 						await process_query(ctx, voice_channel)
 			else:
-				voice = utils.get(main.bot.voice_clients, guild=ctx.guild)
 				voice_channel = ctx.user.voice.channel
 				song = search_yt(music)
 				if not song:
@@ -222,7 +221,7 @@ class Play(commands.Cog):
 									inline=True)
 					embed.set_footer(text="Song requested by: " + ctx.user.name)
 					await ctx.followup.send(embed=embed)
-					await self.play_music(ctx, voice)
+					await self.play_music(ctx)
 		else:
 			await ctx.followup.send(content="Connect to a voice channel!", ephemeral=True)
 

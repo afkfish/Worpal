@@ -18,7 +18,7 @@ class Navigation(commands.Cog):
 		voice = utils.get(main.bot.voice_clients, guild=ctx.guild)
 		if voice is not None:
 			voice.stop()
-			await Play(commands.Cog).play_music(ctx, voice)
+			await Play(commands.Cog).play_music(ctx)
 			embed = Embed(title="Skipped :next_track:")
 			await ctx.followup.send(embed=embed)
 

@@ -72,7 +72,7 @@ class Settings(commands.Cog):
 			json.dump(data, f, indent=4)
 		await settings_embed(ctx)
 
-	@settings_.subcommand(name="loop", description="Turns on/off loop")
+	@settings_.subcommand(name="loop", description="Turns on/off loop", guild_ids=[940575531567546369])
 	async def settigs_loop(self, ctx, loop: str = SlashOption(name="loop",
 															  description="boolean option",
 															  required=True)):
