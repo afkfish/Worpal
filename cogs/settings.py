@@ -72,20 +72,20 @@ class Settings(commands.Cog):
 			json.dump(data, f, indent=4)
 		await settings_embed(ctx)
 
-	@settings_.subcommand(name="loop", description="Turns on/off loop", guild_ids=[940575531567546369])
-	async def settigs_loop(self, ctx, loop: str = SlashOption(name="loop",
-															  description="boolean option",
-															  required=True)):
-		await ctx.response.defer()
-		with open('./settings/settings.json', 'r') as f:
-			data = json.load(f)
-		if loop.lower() in bool_str:
-			data[str(ctx.guild.id)]['loop'] = True
-		else:
-			data[str(ctx.guild.id)]['loop'] = False
-		with open('./settings/settings.json', 'w') as f:
-			json.dump(data, f, indent=4)
-		await settings_embed(ctx)
+	# @settings_.subcommand(name="loop", description="Turns on/off loop")
+	# async def settigs_loop(self, ctx, loop: str = SlashOption(name="loop",
+	# 														  description="boolean option",
+	# 														  required=True)):
+	# 	await ctx.response.defer()
+	# 	with open('./settings/settings.json', 'r') as f:
+	# 		data = json.load(f)
+	# 	if loop.lower() in bool_str:
+	# 		data[str(ctx.guild.id)]['loop'] = True
+	# 	else:
+	# 		data[str(ctx.guild.id)]['loop'] = False
+	# 	with open('./settings/settings.json', 'w') as f:
+	# 		json.dump(data, f, indent=4)
+	# 	await settings_embed(ctx)
 
 
 def setup(bot):
