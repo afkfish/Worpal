@@ -2,10 +2,11 @@ import youtube_dl.utils
 from requests import get, exceptions
 from youtube_dl import YoutubeDL
 
-YDL_OPTIONS = {"format": "bestaudio", "noplaylist": True}
+YDL_OPTIONS = {"format": "bestaudio", "noplaylist": True, "quiet": True}
 
 
 def search_yt(item, multiple: bool = False):
+	print('Downloading: ' + item)
 	with YoutubeDL(YDL_OPTIONS) as ydl:
 		try:
 			try:
@@ -23,6 +24,5 @@ def search_yt(item, multiple: bool = False):
 
 		except youtube_dl.utils.DownloadError:
 			return False
-
 	return {'source': info['formats'][0]['url'], 'title': info['title'], 'thumbnail': info['thumbnail'],
 			'duration': info['duration']}
