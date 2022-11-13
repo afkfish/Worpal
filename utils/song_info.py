@@ -33,7 +33,11 @@ key = "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8"
 
 
 def fast_link(url):
-	video_id = url.split("v=")[1]
+	try:
+		video_id = url.split("v=")[1]
+	except IndexError:
+		return False
+
 	headers = {
 		'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
 					  'Chrome/88.0.4324.96 Safari/537.36',
