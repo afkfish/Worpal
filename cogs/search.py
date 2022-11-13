@@ -75,7 +75,6 @@ class Search(commands.Cog):
 			await ctx.followup.send(embed=embed, view=view)
 			await view.wait()
 			if ctx.user.voice:
-				voice = utils.get(main.bot.voice_clients, guild=ctx.guild)
 				voice_channel = ctx.user.voice.channel
 				if view.value is not None:
 					main.bot.music_queue[ctx.guild.id].append([cropped[view.value-1], voice_channel])
@@ -87,7 +86,7 @@ class Search(commands.Cog):
 									inline=True)
 					embed.set_footer(text="Song requested by: " + ctx.user.name)
 					await ctx.send(embed=embed)
-					await Play(commands.Cog).play_music(ctx, voice)
+					await Play(commands.Cog).play_music(ctx)
 
 			else:
 				await ctx.send(content="Connect to a voice channel!", ephemeral=True)

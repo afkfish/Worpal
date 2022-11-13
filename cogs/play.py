@@ -219,11 +219,13 @@ class Play(commands.Cog):
 						await process_query(ctx, voice_channel)
 			else:
 				voice_channel = ctx.user.voice.channel
-				song = search_yt(music)
+				song = fast_link(music)
 				if not song:
-					await ctx.followup.send(content="Could not download the song. Incorrect format try another "
-													"keyword. This could be due to playlist or a livestream "
-													"format.")
+					song = search_yt(music)
+
+				if not song:
+					await ctx.followup.send(content="Cannot play the song. Could be an incorrect input or the video is "
+													"unavailable in this region.")
 				else:
 					main.bot.music_queue[ctx.guild.id].append([song, voice_channel])
 					embed.set_thumbnail(url=main.bot.music_queue[ctx.guild.id][-1][0]['thumbnail'])
