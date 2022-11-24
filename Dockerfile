@@ -1,4 +1,4 @@
-FROM python:3.10
+FROM python:3.11
 ENV python3="/usr/local/bin/python3"
 WORKDIR /app
 COPY requirements.txt requirements.txt
