@@ -17,7 +17,7 @@ JSON_FORMAT = {'name': '', 'songs': []}
 
 async def process_query(ctx, vc):
 	for entry in main.bot.query[ctx.guild.id]:
-		track = search_yt(entry)
+		track = fast_link(entry)
 		main.bot.query[ctx.guild.id].pop(0)
 		if track:
 			main.bot.music_queue[ctx.guild.id].append([track, vc])
@@ -206,7 +206,7 @@ class Play(commands.Cog):
 				embed.set_footer(text="Song requested by: " + ctx.user.name)
 				voice_channel = ctx.user.voice.channel
 				await ctx.followup.send(embed=embed)
-				track = search_yt(main.bot.query[ctx.guild.id][0])
+				track = fast_link(main.bot.query[ctx.guild.id][0])
 				main.bot.query[ctx.guild.id].pop(0)
 				if track is False:
 					if len(main.bot.query[ctx.guild.id]) > 0:
@@ -221,8 +221,7 @@ class Play(commands.Cog):
 				voice_channel = ctx.user.voice.channel
 				song = fast_link(music)
 				if not song:
-					song = search_yt(music)
-
+					song = fast_link(music)
 				if not song:
 					await ctx.followup.send(content="Cannot play the song. Could be an incorrect input or the video is "
 													"unavailable in this region.")
@@ -269,7 +268,7 @@ class Play(commands.Cog):
 			voice_channel = ctx.user.voice.channel
 			if voice is not None:
 				voice.stop()
-				song = search_yt(music)
+				song = fast_link(music)
 				if not song:
 					await ctx.followup.send(content="Could not download the song. Incorrect format try another "
 													"keyword. This could be due to playlist or a livestream "
@@ -346,7 +345,7 @@ class Play(commands.Cog):
 			if voice_channel is None:
 				await ctx.response.send_message("Connect to a voice channel!")
 			else:
-				song = search_yt(item)
+				song = fast_link(item)
 				if song is False:
 					await ctx.response.send_message("Could not play the song from the playlist.")
 				else:

@@ -1,18 +1,17 @@
 import base64
-import json
 from urllib.parse import urlencode
 
 import requests
 
+from main import bot
 
-class SpotifyApi:
+
+class SpotifyApi():
 	url = 'https://accounts.spotify.com/api/token'
 	headers = {}
 	data = {}
-	with open("secrets.json", "r") as f:
-		client = json.load(f)
-	client_id = client["spotify"]["client_id"]
-	client_secret = client["spotify"]["client_secret"]
+	client_id = bot.secrets["spotify"]["client_id"]
+	client_secret = bot.secrets["spotify"]["client_secret"]
 	message = base64.b64encode(f"{client_id}:{client_secret}".encode())
 	headers['Authorization'] = f"Basic {message.decode()}"
 	data['grant_type'] = "client_credentials"

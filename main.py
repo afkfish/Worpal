@@ -8,7 +8,7 @@ bot.remove_command('help')
 icon = "https://i.imgur.com/Rygy2KWs.jpg"
 
 with open("secrets.json", "r") as file:
-	application_key = json.load(file)["discord"]["app_key"]
+	bot.secrets = json.load(file)
 
 modules = [
 	'play',
@@ -135,4 +135,4 @@ for cog in modules:
 	except Exception as e:
 		print(f"Failed to load cog {cog}: {type(e).__name__}, {e}")
 
-bot.run(application_key)
+bot.run(bot.secrets["discord"]["app_key"])

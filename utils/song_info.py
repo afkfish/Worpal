@@ -1,43 +1,60 @@
-import youtube_dl.utils
+import googleapiclient.discovery
 from requests import get, post, exceptions
-from youtube_dl import YoutubeDL
 
-YDL_OPTIONS = {"format": "bestaudio", "noplaylist": True, "quiet": True}
+from main import bot
 
+# YDL_OPTIONS = {"format": "bestaudio", "noplaylist": True, "quiet": True}
+#
+#
+# def search_yt(item, multiple: bool = False):
+# 	print('Downloading: ' + item)
+# 	with YoutubeDL(YDL_OPTIONS) as ydl:
+# 		try:
+# 			try:
+# 				get(item)
+#
+# 			except exceptions.RequestException or exceptions.MissingSchema:
+# 				if multiple:
+# 					return ydl.extract_info(f"ytsearch5:{item}", download=False)['entries']
+#
+# 				else:
+# 					info = ydl.extract_info(f"ytsearch:{item}", download=False)['entries'][0]
+#
+# 			else:
+# 				info = ydl.extract_info(item, download=False)
+#
+# 		except youtube_dl.utils.DownloadError:
+# 			return False
+# 	return {'source': info['formats'][0]['url'], 'title': info['title'], 'thumbnail': info['thumbnail'],
+# 			'duration': info['duration']}
 
-def search_yt(item, multiple: bool = False):
-	print('Downloading: ' + item)
-	with YoutubeDL(YDL_OPTIONS) as ydl:
-		try:
-			try:
-				get(item)
+def search_api(querry: str):
+	api_service_name = "youtube"
+	api_version = "v3"
 
-			except exceptions.RequestException or exceptions.MissingSchema:
-				if multiple:
-					return ydl.extract_info(f"ytsearch5:{item}", download=False)['entries']
+	developer_key = bot.secrets["youtube"]["api_key"]
 
-				else:
-					info = ydl.extract_info(f"ytsearch:{item}", download=False)['entries'][0]
+	youtube = googleapiclient.discovery.build(
+		api_service_name, api_version, developerKey=developer_key)
 
-			else:
-				info = ydl.extract_info(item, download=False)
+	request = youtube.search().list(
+		part="snippet",
+		q=querry
+	)
+	response = request.execute()
 
-		except youtube_dl.utils.DownloadError:
-			return False
-	return {'source': info['formats'][0]['url'], 'title': info['title'], 'thumbnail': info['thumbnail'],
-			'duration': info['duration']}
+	# generate a list of video ids from response['items']
+	# results = [item["id"]["videoId"] for item in response["items"]]
+	result = response["items"][0]["id"]["videoId"]
+
+	return result
 
 
 magic_url = "https://www.youtube.com/youtubei/v1/player"
-key = "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8"
+embed_key = "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8"
 
 
-def fast_link(url):
-	try:
-		video_id = url.split("v=")[1]
-	except IndexError:
-		return False
-
+def get_info(video_id: str):
 	headers = {
 		'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
 					  'Chrome/88.0.4324.96 Safari/537.36',
@@ -58,7 +75,7 @@ def fast_link(url):
 	}
 
 	try:
-		res = post(url, headers=headers, params={"key": key}, json=payload_data)
+		res = post(magic_url, headers=headers, params={"key": embed_key}, json=payload_data)
 		json_data = res.json()
 		if res.status_code != 200:
 			return False
@@ -66,13 +83,22 @@ def fast_link(url):
 		print("Error in video info")
 		return False
 
-	audio_only = [stream for stream in json_data['streamingData']['adaptiveFormats'] if
-				  'opus' in stream['mimeType'] and 'AUDIO_QUALITY_MEDIUM' == stream['audioQuality']]
-
 	try:
+		audio_only = [stream for stream in json_data['streamingData']['adaptiveFormats'] if
+					  'opus' in stream['mimeType'] and 'AUDIO_QUALITY_MEDIUM' == stream['audioQuality']]
 		ret = {'source': audio_only[0]['url'], 'title': json_data['videoDetails']['title'],
 			   'thumbnail': json_data['videoDetails']['thumbnail']['thumbnails'][-1]['url'],
 			   'duration': audio_only[0]['approxDurationMs']}
 		return ret
 	except KeyError:
 		return False
+
+
+def fast_link(item):
+	try:
+		get(item)
+	except exceptions.RequestException or exceptions.MissingSchema:
+		id = search_api(item)
+		return get_info(id)
+	else:
+		return get_info(item.split("v=")[-1])

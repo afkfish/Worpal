@@ -3,12 +3,12 @@ from urllib.parse import urlencode
 
 import requests
 
+from main import bot
+
 
 class GeniusApi:
 	headers = {}
-	with open("secrets.json", "r") as f:
-		client = json.load(f)
-	token = client["genius"]["access_token"]
+	token = bot.secrets["genius"]["access_token"]
 	headers["Authorization"] = "Bearer " + token
 
 	def get_song(self, q):
