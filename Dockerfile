@@ -7,9 +7,7 @@ RUN apt-get update && apt-get install python3-dev \
                                       make \
                                       libc-dev \
                                       libffi-dev -y
-RUN pip3 install -r requirements.txt
-RUN apt-get update -y
-RUN apt-get dist-upgrade -y
+RUN LIBSODIUM_MAKE_ARGS=-j4 pip3 install -r requirements.txt
 RUN apt-get install ffmpeg -y
 COPY . .
 CMD ["python3", "main.py"]
