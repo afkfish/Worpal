@@ -221,7 +221,7 @@ class Play(commands.Cog):
 				voice_channel = ctx.user.voice.channel
 				song = fast_link(music)
 				if not song:
-					song = fast_link(music)
+					song = search_yt(music)
 				if not song:
 					await ctx.followup.send(content="Cannot play the song. Could be an incorrect input or the video is "
 													"unavailable in this region.")

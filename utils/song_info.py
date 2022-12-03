@@ -1,32 +1,38 @@
+from urllib.parse import urlparse
+
 import googleapiclient.discovery
+import urllib3.util
+import youtube_dl
 from requests import get, post, exceptions
+from youtube_dl import YoutubeDL
 
 from main import bot
 
-# YDL_OPTIONS = {"format": "bestaudio", "noplaylist": True, "quiet": True}
-#
-#
-# def search_yt(item, multiple: bool = False):
-# 	print('Downloading: ' + item)
-# 	with YoutubeDL(YDL_OPTIONS) as ydl:
-# 		try:
-# 			try:
-# 				get(item)
-#
-# 			except exceptions.RequestException or exceptions.MissingSchema:
-# 				if multiple:
-# 					return ydl.extract_info(f"ytsearch5:{item}", download=False)['entries']
-#
-# 				else:
-# 					info = ydl.extract_info(f"ytsearch:{item}", download=False)['entries'][0]
-#
-# 			else:
-# 				info = ydl.extract_info(item, download=False)
-#
-# 		except youtube_dl.utils.DownloadError:
-# 			return False
-# 	return {'source': info['formats'][0]['url'], 'title': info['title'], 'thumbnail': info['thumbnail'],
-# 			'duration': info['duration']}
+YDL_OPTIONS = {"format": "bestaudio", "noplaylist": True, "quiet": True}
+
+
+def search_yt(item, multiple: bool = False):
+	print('Downloading: ' + item)
+	with YoutubeDL(YDL_OPTIONS) as ydl:
+		try:
+			try:
+				get(item)
+
+			except exceptions.RequestException or exceptions.MissingSchema:
+				if multiple:
+					return ydl.extract_info(f"ytsearch5:{item}", download=False)['entries']
+
+				else:
+					info = ydl.extract_info(f"ytsearch:{item}", download=False)['entries'][0]
+
+			else:
+				info = ydl.extract_info(item, download=False)
+
+		except youtube_dl.utils.DownloadError:
+			return False
+	return {'source': info['formats'][0]['url'], 'title': info['title'], 'thumbnail': info['thumbnail'],
+			'duration': info['duration']}
+
 
 def search_api(querry: str):
 	api_service_name = "youtube"
@@ -91,14 +97,14 @@ def get_info(video_id: str):
 			   'duration': audio_only[0]['approxDurationMs']}
 		return ret
 	except KeyError:
+		print(f"{video_id} not available without deciphering")
 		return False
 
 
 def fast_link(item):
-	try:
-		get(item)
-	except exceptions.RequestException or exceptions.MissingSchema:
-		id = search_api(item)
-		return get_info(id)
-	else:
+	result = urlparse(item)
+	if all([result.scheme, result.netloc]):
 		return get_info(item.split("v=")[-1])
+	else:
+		music_id = search_api(item)
+		return get_info(music_id)
