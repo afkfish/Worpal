@@ -207,11 +207,13 @@ class Play(commands.Cog):
 				voice_channel = ctx.user.voice.channel
 				await ctx.followup.send(embed=embed)
 				track = fast_link(main.bot.query[ctx.guild.id][0])
-				main.bot.query[ctx.guild.id].pop(0)
-				if track is False:
-					if len(main.bot.query[ctx.guild.id]) > 0:
-						await process_query(ctx, voice_channel)
-						await self.play_music(ctx)
+				if not track:
+					track = search_yt(main.bot.query[ctx.guild.id][0])
+					main.bot.query[ctx.guild.id].pop(0)
+				if not track:
+					await ctx.followup.send(content="Cannot play the song. Could be an incorrect input or the video is "
+													"unavailable in this region.")
+					main.bot.query[ctx.guild.id].pop(0)
 				else:
 					main.bot.music_queue[ctx.guild.id].append([track, voice_channel])
 					await self.play_music(ctx)
