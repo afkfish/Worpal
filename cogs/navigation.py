@@ -1,8 +1,8 @@
 from nextcord import slash_command, Embed, utils
 from nextcord.ext import commands
 
-import main
 from cogs.play import slist, Play
+from main import bot
 
 
 class Navigation(commands.Cog):
@@ -12,10 +12,10 @@ class Navigation(commands.Cog):
 
 	@slash_command(name="skip",
 				   description="Skip the current song",
-				   guild_ids=main.bot.guild_ids)
+				   guild_ids=bot.guild_ids)
 	async def skip(self, ctx):
 		await ctx.response.defer()
-		voice = utils.get(main.bot.voice_clients, guild=ctx.guild)
+		voice = utils.get(bot.voice_clients, guild=ctx.guild)
 		if voice is not None:
 			voice.stop()
 			await Play(commands.Cog).play_music(ctx)
@@ -24,10 +24,10 @@ class Navigation(commands.Cog):
 
 	@slash_command(name="pause",
 				   description="Pause the song",
-				   guild_ids=main.bot.guild_ids)
+				   guild_ids=bot.guild_ids)
 	async def pause_(self, ctx):
 		await ctx.response.defer()
-		voice = utils.get(main.bot.voice_clients, guild=ctx.guild)
+		voice = utils.get(bot.voice_clients, guild=ctx.guild)
 		if voice.is_playing():
 			voice.pause()
 			embed = Embed(title="Paused :pause_button:")
@@ -35,10 +35,10 @@ class Navigation(commands.Cog):
 
 	@slash_command(name="resume",
 				   description="Resume playing",
-				   guild_ids=main.bot.guild_ids)
+				   guild_ids=bot.guild_ids)
 	async def resume_(self, ctx):
 		await ctx.response.defer()
-		voice = utils.get(main.bot.voice_clients, guild=ctx.guild)
+		voice = utils.get(bot.voice_clients, guild=ctx.guild)
 		if voice.is_paused():
 			voice.resume()
 			embed = Embed(title="Resumed")
@@ -46,27 +46,27 @@ class Navigation(commands.Cog):
 
 	@slash_command(name="stop",
 				   description="Stop playing",
-				   guild_ids=main.bot.guild_ids)
+				   guild_ids=bot.guild_ids)
 	async def stop_(self, ctx):
 		await ctx.response.defer()
-		voice = utils.get(main.bot.voice_clients, guild=ctx.guild)
+		voice = utils.get(bot.voice_clients, guild=ctx.guild)
 		voice.stop()
-		main.bot.music_queue[ctx.guild.id] = []
+		bot.music_queue[ctx.guild.id] = []
 		embed = Embed(title="Stopped :stop_button:")
 		await ctx.followup.send(embed=embed)
 
 	@slash_command(name="leave",
 				   description="Leave voice chat",
-				   guild_ids=main.bot.guild_ids)
+				   guild_ids=bot.guild_ids)
 	async def leave_(self, ctx):
 		await ctx.response.defer()
-		voice = utils.get(main.bot.voice_clients, guild=ctx.guild)
+		voice = utils.get(bot.voice_clients, guild=ctx.guild)
 		if voice is not None:
 			await voice.disconnect()
 			await ctx.followup.send(content="Disconnected!")
 
 	@slash_command(name="clear",
-				   guild_ids=main.bot.guild_ids)
+				   guild_ids=bot.guild_ids)
 	async def clear(self, ctx):
 		pass
 
@@ -74,12 +74,12 @@ class Navigation(commands.Cog):
 					  description="Clear duplicated songs from queue.")
 	async def clear_dup(self, ctx):
 		await ctx.response.defer()
-		if main.bot.music_queue[ctx.guild.id]:
+		if bot.music_queue[ctx.guild.id]:
 			res = []
-			[res.append(x) for x in main.bot.music_queue[ctx.guild.id] if x not in res]
-			main.bot.music_queue[ctx.guild.id] = res
+			[res.append(x) for x in bot.music_queue[ctx.guild.id] if x not in res]
+			bot.music_queue[ctx.guild.id] = res
 		embed = Embed(title="Duplicated songs cleared! :broom:", color=0x152875)
-		embed.set_author(name="Worpal", icon_url=main.icon)
+		embed.set_author(name="Worpal", icon_url=bot.icon)
 		songs = slist(ctx)
 		if songs != "":
 			embed.add_field(name="Songs: ", value=songs, inline=True)
@@ -91,8 +91,8 @@ class Navigation(commands.Cog):
 					  description="Clear all songs from queue.")
 	async def clear_all(self, ctx):
 		await ctx.response.defer()
-		if main.bot.music_queue[ctx.guild.id]:
-			main.bot.music_queue[ctx.guild.id] = []
+		if bot.music_queue[ctx.guild.id]:
+			bot.music_queue[ctx.guild.id] = []
 		embed = Embed(title="Queue cleared! :broom:", color=0x152875)
 		await ctx.followup.send(embed=embed)
 

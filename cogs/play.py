@@ -6,36 +6,38 @@ import re
 from nextcord import Embed, utils, SlashOption, slash_command, FFmpegPCMAudio, embeds, ui, ButtonStyle
 from nextcord.ext import commands
 
-import main
+from main import bot_loop, bot_announce, bot_shuffle, bot
 from utils.genius_api_request import GeniusApi
 from utils.lyrics_scrape import get_lyrics
-from utils.song_info import *
+from utils.song_info import fast_link, search_yt
 from utils.spotify_api_request import SpotifyApi
 
 JSON_FORMAT = {'name': '', 'songs': []}
 
 
 async def process_query(ctx, vc):
-	for entry in main.bot.query[ctx.guild.id]:
+	for entry in bot.query[ctx.guild.id]:
 		track = fast_link(entry)
-		main.bot.query[ctx.guild.id].pop(0)
+		if not track:
+			track = search_yt(entry)
+		bot.query[ctx.guild.id].pop(0)
 		if track:
-			main.bot.music_queue[ctx.guild.id].append([track, vc])
+			bot.music_queue[ctx.guild.id].append([track, vc])
 
 
 def slist(ctx):
 	li = ""
-	for song in main.bot.music_queue[ctx.guild.id]:
+	for song in bot.music_queue[ctx.guild.id]:
 		li += song[0]['title'] + "\n"
 	return li
 
 
 def announce_song(ctx, a, view=None):
 	embed = Embed(title="Currently playing:", color=0x152875)
-	embed.set_author(name="Worpal", icon_url=main.icon)
+	embed.set_author(name="Worpal", icon_url=bot.icon)
 	embed.set_thumbnail(url=a[0]['thumbnail'])
-	if len(main.bot.playing[ctx.guild.id]) > 2:
-		timedelta = (dt.datetime.utcnow() - main.bot.playing[ctx.guild.id][-1]).total_seconds()
+	if len(bot.playing[ctx.guild.id]) > 2:
+		timedelta = (dt.datetime.utcnow() - bot.playing[ctx.guild.id][-1]).total_seconds()
 		rounded = int(timedelta)
 		playtime = dt.timedelta(seconds=rounded)
 		embed.add_field(name=a[0]['title'], value=f"Currently at:\n{playtime}", inline=True)
@@ -44,9 +46,9 @@ def announce_song(ctx, a, view=None):
 		embed.add_field(name=a[0]['title'], value=f"Lenght:\n{str(dt.timedelta(seconds=int(a[0]['duration'])))}",
 						inline=True)
 	if view is not None:
-		main.bot.loop.create_task(ctx.followup.send(embed=embed, view=view))
+		bot.loop.create_task(ctx.followup.send(embed=embed, view=view))
 	else:
-		main.bot.loop.create_task(ctx.followup.send(embed=embed))
+		bot.loop.create_task(ctx.followup.send(embed=embed))
 
 
 class Navigation(ui.View):
@@ -60,9 +62,9 @@ class Navigation(ui.View):
 			child.disabled = True
 		button.style = ButtonStyle.green
 		await ctx.response.edit_message(view=self)
-		voice = utils.get(main.bot.voice_clients, guild=ctx.guild)
+		voice = utils.get(bot.voice_clients, guild=ctx.guild)
 		if voice is not None:
-			main.bot.music_queue[ctx.guild.id].insert(0, main.bot.playing[ctx.guild.id])
+			bot.music_queue[ctx.guild.id].insert(0, bot.playing[ctx.guild.id])
 			voice.stop()
 			await Play(commands.Cog).play_music(ctx)
 			embed = Embed(title="Replaying 🔄")
@@ -75,7 +77,7 @@ class Navigation(ui.View):
 			child.disabled = True
 		button.style = ButtonStyle.green
 		await ctx.response.edit_message(view=self)
-		voice = utils.get(main.bot.voice_clients, guild=ctx.guild)
+		voice = utils.get(bot.voice_clients, guild=ctx.guild)
 		if voice.is_paused():
 			voice.resume()
 			embed = Embed(title="Resumed ▶️")
@@ -88,7 +90,7 @@ class Navigation(ui.View):
 			child.disabled = True
 		button.style = ButtonStyle.green
 		await ctx.response.edit_message(view=self)
-		voice = utils.get(main.bot.voice_clients, guild=ctx.guild)
+		voice = utils.get(bot.voice_clients, guild=ctx.guild)
 		if voice.is_playing():
 			voice.pause()
 			embed = Embed(title="Paused ⏸️")
@@ -101,7 +103,7 @@ class Navigation(ui.View):
 			child.disabled = True
 		button.style = ButtonStyle.green
 		await ctx.response.edit_message(view=self)
-		voice = utils.get(main.bot.voice_clients, guild=ctx.guild)
+		voice = utils.get(bot.voice_clients, guild=ctx.guild)
 		if voice is not None:
 			voice.stop()
 			await Play(commands.Cog).play_music(ctx)
@@ -115,53 +117,54 @@ class Play(commands.Cog):
 		self.bot = bot
 
 	def play_next(self, ctx):
-		if len(main.bot.music_queue[ctx.guild.id]) > 0 or main.bot_loop(ctx.guild.id):
-			vc = utils.get(main.bot.voice_clients, guild=ctx.guild)
+		if len(bot.music_queue[ctx.guild.id]) > 0 or bot_loop(ctx.guild.id):
+			vc = utils.get(bot.voice_clients, guild=ctx.guild)
 			if vc is not None and not vc.is_playing():
-				if main.bot_loop(ctx.guild.id):
-					m_url = main.bot.playing[ctx.guild.id][0]['source']
-				elif main.bot_shuffle(ctx.guild.id):
-					a = random.choice(main.bot.music_queue[ctx.guild.id])
+				if bot_loop(ctx.guild.id):
+					m_url = bot.playing[ctx.guild.id][0]['source']
+				elif bot_shuffle(ctx.guild.id):
+					a = random.choice(bot.music_queue[ctx.guild.id])
 					m_url = a[0]['source']
-					main.bot.playing[ctx.guild.id] = a
-					main.bot.music_queue[ctx.guild.id].remove(a)
+					bot.playing[ctx.guild.id] = a
+					bot.music_queue[ctx.guild.id].remove(a)
 				else:
-					m_url = main.bot.music_queue[ctx.guild.id][0][0]['source']
-					main.bot.playing[ctx.guild.id] = main.bot.music_queue[ctx.guild.id][0]
-					main.bot.music_queue[ctx.guild.id].pop(0)
-				if main.bot_announce(ctx.guild.id):
-					announce_song(ctx, main.bot.playing[ctx.guild.id])
+					m_url = bot.music_queue[ctx.guild.id][0][0]['source']
+					bot.playing[ctx.guild.id] = bot.music_queue[ctx.guild.id][0]
+					bot.music_queue[ctx.guild.id].pop(0)
+				if bot_announce(ctx.guild.id):
+					announce_song(ctx, bot.playing[ctx.guild.id])
 				vc.play(FFmpegPCMAudio(before_options='-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
 									   source=m_url), after=self.play_next(ctx))
-				main.bot.playing[ctx.guild.id].append(dt.datetime.utcnow())
+				bot.playing[ctx.guild.id].append(dt.datetime.utcnow())
 
 	async def play_music(self, ctx):
-		if len(main.bot.music_queue[ctx.guild.id]) > 0:
-			m_url = main.bot.music_queue[ctx.guild.id][0][0]['source']
-			vc = utils.find(lambda vc: vc.guild.id == ctx.guild.id, main.bot.voice_clients)
+		if len(bot.music_queue[ctx.guild.id]) > 0:
+			print(bot.voice_clients == bot.voice_clients)
+			m_url = bot.music_queue[ctx.guild.id][0][0]['source']
+			vc = utils.find(lambda vc: vc.guild.id == ctx.guild.id, bot.voice_clients)
 			if vc is None:
-				vc = await main.bot.music_queue[ctx.guild.id][0][1].connect()
-			elif vc.channel != main.bot.music_queue[ctx.guild.id][0][1]:
-				await vc.move_to(main.bot.music_queue[ctx.guild.id][0][1])
+				vc = await bot.music_queue[ctx.guild.id][0][1].connect()
+			elif vc.channel != bot.music_queue[ctx.guild.id][0][1]:
+				await vc.move_to(bot.music_queue[ctx.guild.id][0][1])
 			if not vc.is_playing():
-				main.bot.playing[ctx.guild.id] = main.bot.music_queue[ctx.guild.id][0]
-				main.bot.music_queue[ctx.guild.id].pop(0)
-				if main.bot_announce(ctx.guild.id):
-					announce_song(ctx, main.bot.music_queue[ctx.guild.id][0])
+				bot.playing[ctx.guild.id] = bot.music_queue[ctx.guild.id][0]
+				bot.music_queue[ctx.guild.id].pop(0)
+				if bot_announce(ctx.guild.id):
+					announce_song(ctx, bot.music_queue[ctx.guild.id][0])
 				if vc.is_connected():
 					vc.play(FFmpegPCMAudio(before_options='-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
 										   source=m_url), after=self.play_next(ctx))
-					main.bot.playing[ctx.guild.id].append(dt.datetime.utcnow())
+					bot.playing[ctx.guild.id].append(dt.datetime.utcnow())
 
-	@slash_command(name="play", description="Play a song", guild_ids=main.bot.guild_ids)
+	@slash_command(name="play", description="Play a song", guild_ids=bot.guild_ids)
 	async def play(self, ctx,
 				   music: str = SlashOption(name="music", description="the music to be played", required=True)):
 		await ctx.response.defer()
 		if ctx.user.voice:
 			embed = Embed(title="Song added to queue" + (
-				f" from Spotify {main.bot.get_emoji(944554099175727124)}" if "spotify" in music else ""
+				f" from Spotify {bot.get_emoji(944554099175727124)}" if "spotify" in music else ""
 			), color=0x152875)
-			embed.set_author(name="Worpal", icon_url=main.icon)
+			embed.set_author(name="Worpal", icon_url=bot.icon)
 			if "open.spotify.com" in music:
 				artists = ""
 				if "/track" in music:
@@ -176,7 +179,7 @@ class Play(commands.Cog):
 					embed.add_field(name=f"{song['name']}\n\n",
 									value=f"{artists}\n"
 										  f"{str(dt.timedelta(seconds=round(song['duration_ms'] / 1000, 0)))}")
-					main.bot.query[ctx.guild.id].append(f"{song['name']}\t{artists}")
+					bot.query[ctx.guild.id].append(f"{song['name']}\t{artists}")
 				elif "/playlist" in music:
 					a = re.search("playlist/(.*)\?si", music).group(1)
 					playlist = SpotifyApi().get_playlist(playlist_id=a)
@@ -188,7 +191,7 @@ class Play(commands.Cog):
 							for artist in song['track']['artists']:
 								artists += "".join(f"{artist['name']}, ")
 							artists = artists[:-2]
-							main.bot.query[ctx.guild.id].append(f"{song['track']['name']}\t{artists}")
+							bot.query[ctx.guild.id].append(f"{song['track']['name']}\t{artists}")
 					embed.title = f"Playlist added to queue from Spotify {self.bot.get_emoji(944554099175727124)}"
 					embed.set_thumbnail(url=playlist['images'][0]['url'])
 					embed.add_field(name=f"{playlist['name']}\n\n",
@@ -202,22 +205,22 @@ class Play(commands.Cog):
 					embed.add_field(name=f"{song['name']}\n\n",
 									value=f"{artists}\n"
 										  f"{str(dt.timedelta(seconds=round(song['duration_ms'] / 1000, 0)))}")
-					main.bot.query[ctx.guild.id].append(f"{song['name']}\t{artists}")
+					bot.query[ctx.guild.id].append(f"{song['name']}\t{artists}")
 				embed.set_footer(text="Song requested by: " + ctx.user.name)
 				voice_channel = ctx.user.voice.channel
 				await ctx.followup.send(embed=embed)
-				track = fast_link(main.bot.query[ctx.guild.id][0])
+				track = fast_link(bot.query[ctx.guild.id][0])
 				if not track:
-					track = search_yt(main.bot.query[ctx.guild.id][0])
-					main.bot.query[ctx.guild.id].pop(0)
+					track = search_yt(bot.query[ctx.guild.id][0])
+					bot.query[ctx.guild.id].pop(0)
 				if not track:
 					await ctx.followup.send(content="Cannot play the song. Could be an incorrect input or the video is "
 													"unavailable in this region.")
-					main.bot.query[ctx.guild.id].pop(0)
+					bot.query[ctx.guild.id].pop(0)
 				else:
-					main.bot.music_queue[ctx.guild.id].append([track, voice_channel])
+					bot.music_queue[ctx.guild.id].append([track, voice_channel])
 					await self.play_music(ctx)
-					if len(main.bot.query[ctx.guild.id]) > 0:
+					if len(bot.query[ctx.guild.id]) > 0:
 						await process_query(ctx, voice_channel)
 			else:
 				voice_channel = ctx.user.voice.channel
@@ -228,11 +231,11 @@ class Play(commands.Cog):
 					await ctx.followup.send(content="Cannot play the song. Could be an incorrect input or the video is "
 													"unavailable in this region.")
 				else:
-					main.bot.music_queue[ctx.guild.id].append([song, voice_channel])
-					embed.set_thumbnail(url=main.bot.music_queue[ctx.guild.id][-1][0]['thumbnail'])
-					embed.add_field(name=main.bot.music_queue[ctx.guild.id][-1][0]['title'],
+					bot.music_queue[ctx.guild.id].append([song, voice_channel])
+					embed.set_thumbnail(url=bot.music_queue[ctx.guild.id][-1][0]['thumbnail'])
+					embed.add_field(name=bot.music_queue[ctx.guild.id][-1][0]['title'],
 									value=str(dt.timedelta(
-										seconds=int(main.bot.music_queue[ctx.guild.id][-1][0]['duration']))),
+										seconds=int(bot.music_queue[ctx.guild.id][-1][0]['duration']))),
 									inline=True)
 					embed.set_footer(text="Song requested by: " + ctx.user.name)
 					await ctx.followup.send(embed=embed)
@@ -242,11 +245,11 @@ class Play(commands.Cog):
 
 	@slash_command(name="queue",
 				   description="Displays the songs in the queue",
-				   guild_ids=main.bot.guild_ids)
+				   guild_ids=bot.guild_ids)
 	async def queue(self, ctx):
 		await ctx.response.defer()
 		embed = Embed(title="Queue", color=0x152875)
-		embed.set_author(name="Worpal", icon_url=main.icon)
+		embed.set_author(name="Worpal", icon_url=bot.icon)
 		songs = slist(ctx)
 		if songs:
 			embed.add_field(name="Songs: ", value=songs, inline=True)
@@ -256,17 +259,17 @@ class Play(commands.Cog):
 
 	@slash_command(name="playskip",
 				   description="Skip the current song and play the given one.",
-				   guild_ids=main.bot.guild_ids)
+				   guild_ids=bot.guild_ids)
 	async def playskip(self, ctx, music: str = SlashOption(name="music",
 														   description="the music to be played",
 														   required=True)):
 		await ctx.response.defer()
 		if ctx.user.voice:
 			embed = Embed(title="Song added to queue" +
-								f"from Spotify {main.bot.get_emoji(944554099175727124)}" if "spotify" in music else "",
+								f"from Spotify {bot.get_emoji(944554099175727124)}" if "spotify" in music else "",
 						  color=0x152875)
-			embed.set_author(name="Worpal", icon_url=main.icon)
-			voice = utils.get(main.bot.voice_clients, guild=ctx.guild)
+			embed.set_author(name="Worpal", icon_url=bot.icon)
+			voice = utils.get(bot.voice_clients, guild=ctx.guild)
 			voice_channel = ctx.user.voice.channel
 			if voice is not None:
 				voice.stop()
@@ -276,11 +279,11 @@ class Play(commands.Cog):
 													"keyword. This could be due to playlist or a livestream "
 													"format.")
 				else:
-					main.bot.music_queue[ctx.guild.id].insert(0, [song, voice_channel])
-					embed.set_thumbnail(url=main.bot.music_queue[ctx.guild.id][0][0]['thumbnail'])
-					embed.add_field(name=main.bot.music_queue[ctx.guild.id][0][0]['title'],
+					bot.music_queue[ctx.guild.id].insert(0, [song, voice_channel])
+					embed.set_thumbnail(url=bot.music_queue[ctx.guild.id][0][0]['thumbnail'])
+					embed.add_field(name=bot.music_queue[ctx.guild.id][0][0]['title'],
 									value=str(dt.timedelta(
-										seconds=int(main.bot.music_queue[ctx.guild.id][0][0]['duration']))),
+										seconds=int(bot.music_queue[ctx.guild.id][0][0]['duration']))),
 									inline=True)
 					embed.set_footer(text="Song requested by: " + ctx.user.name)
 					await ctx.followup.send(embed=embed)
@@ -292,11 +295,11 @@ class Play(commands.Cog):
 
 	@slash_command(name="queue",
 				   description="Displays the songs in the queue",
-				   guild_ids=main.bot.guild_ids)
+				   guild_ids=bot.guild_ids)
 	async def queue(self, ctx):
 		await ctx.response.defer()
 		embed = Embed(title="Queue", color=0x152875)
-		embed.set_author(name="Worpal", icon_url=main.icon)
+		embed.set_author(name="Worpal", icon_url=bot.icon)
 		songs = slist(ctx)
 		if songs:
 			embed.add_field(name="Songs: ", value=songs, inline=True)
@@ -351,18 +354,18 @@ class Play(commands.Cog):
 				if song is False:
 					await ctx.response.send_message("Could not play the song from the playlist.")
 				else:
-					main.bot.music_queue.append([song, voice_channel])
+					bot.music_queue.append([song, voice_channel])
 					await self.play_music(ctx)
 		await ctx.response.send_message("Playlist succefully loaded!")
 
 	@slash_command(name="np",
 				   description="The song that is currently being played",
-				   guild_ids=main.bot.guild_ids)
+				   guild_ids=bot.guild_ids)
 	async def np(self, ctx):
 		await ctx.response.defer()
-		if len(main.bot.playing[ctx.guild.id]) > 0:
+		if len(bot.playing[ctx.guild.id]) > 0:
 			view = Navigation()
-			announce_song(ctx, main.bot.playing[ctx.guild.id], view)
+			announce_song(ctx, bot.playing[ctx.guild.id], view)
 			await view.wait()
 
 		else:
@@ -374,15 +377,15 @@ class Play(commands.Cog):
 	async def lyrics(self, ctx):
 		await ctx.response.defer()
 		embed = Embed(title="Song Lyrics:", color=0x152875)
-		embed.set_author(name="Worpal", icon_url=main.icon)
+		embed.set_author(name="Worpal", icon_url=bot.icon)
 		try:
-			song = GeniusApi().get_song(main.bot.playing[ctx.guild.id][0]['title'])
+			song = GeniusApi().get_song(bot.playing[ctx.guild.id][0]['title'])
 			lyrics = get_lyrics(song)
 			ly = []
 			for i in range(round(len(lyrics) / 1024) - 1):
 				ly.append(lyrics[i:i + 1024])
 			embed.add_field(name=song["title"], value=embeds.EmptyEmbed)
-			embed.set_thumbnail(url=main.bot.playing[ctx.guild.id][0]['thumbnail'])
+			embed.set_thumbnail(url=bot.playing[ctx.guild.id][0]['thumbnail'])
 			print(ly)
 			print(len(ly))
 			embedl = [embed]

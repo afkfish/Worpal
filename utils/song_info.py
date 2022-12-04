@@ -1,7 +1,6 @@
 from urllib.parse import urlparse
 
 import googleapiclient.discovery
-import urllib3.util
 import youtube_dl
 from requests import get, post, exceptions
 from youtube_dl import YoutubeDL

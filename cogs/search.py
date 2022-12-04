@@ -1,10 +1,10 @@
 import datetime as dt
 
-from nextcord import slash_command, SlashOption, Embed, utils, ui, ButtonStyle
+from nextcord import slash_command, SlashOption, Embed, ui, ButtonStyle
 from nextcord.ext import commands
 
-import main
 from cogs.play import Play
+from main import bot
 from utils.song_info import search_yt
 
 
@@ -55,7 +55,7 @@ class Search(commands.Cog):
 
 	@slash_command(name="search",
 				   description="Search for a song on youtube.",
-				   guild_ids=main.bot.guild_ids)
+				   guild_ids=bot.guild_ids)
 	async def search_(self, ctx, q: str = SlashOption(name="title",
 													  description="The video to be found.",
 													  required=True)):
@@ -64,7 +64,7 @@ class Search(commands.Cog):
 		if songs:
 			view = Selector()
 			embed = Embed(title=f"Search results for {q}", color=0x152875)
-			embed.set_author(name="Worpal", icon_url=main.icon)
+			embed.set_author(name="Worpal", icon_url=bot.icon)
 			cropped = [{'source': song['formats'][0]['url'], 'title': song['title'], 'thumbnail': song['thumbnail'],
 						'duration': song['duration']} for song in songs]
 			a = ""
@@ -77,12 +77,12 @@ class Search(commands.Cog):
 			if ctx.user.voice:
 				voice_channel = ctx.user.voice.channel
 				if view.value is not None:
-					main.bot.music_queue[ctx.guild.id].append([cropped[view.value-1], voice_channel])
+					bot.music_queue[ctx.guild.id].append([cropped[view.value-1], voice_channel])
 					embed = Embed(title="Song added from search", color=0x152875)
-					embed.set_thumbnail(url=main.bot.music_queue[ctx.guild.id][-1][0]['thumbnail'])
-					embed.add_field(name=main.bot.music_queue[ctx.guild.id][-1][0]['title'],
+					embed.set_thumbnail(url=bot.music_queue[ctx.guild.id][-1][0]['thumbnail'])
+					embed.add_field(name=bot.music_queue[ctx.guild.id][-1][0]['title'],
 									value=str(dt.timedelta(
-										seconds=int(main.bot.music_queue[ctx.guild.id][-1][0]['duration']))),
+										seconds=int(bot.music_queue[ctx.guild.id][-1][0]['duration']))),
 									inline=True)
 					embed.set_footer(text="Song requested by: " + ctx.user.name)
 					await ctx.send(embed=embed)

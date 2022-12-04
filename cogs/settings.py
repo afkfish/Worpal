@@ -3,7 +3,7 @@ import json
 from nextcord import SlashOption, slash_command, Embed
 from nextcord.ext import commands
 
-import main
+from main import bot, bot_shuffle, bot_loop, bot_announce
 
 bool_str = ["1", "true", "yes", "y", "t"]
 
@@ -13,20 +13,20 @@ async def settings_embed(ctx):
 				  description="The setting related to the bot",
 				  color=0x152875)
 	embed.set_author(name="Worpal",
-					 icon_url=main.icon)
+					 icon_url=bot.icon)
 	embed.add_field(name="Shuffle play :twisted_rightwards_arrows:",
 					value="Plays the songs shuffled\n\nEnabled: {}".format(
-						"True :white_check_mark:" if main.bot_shuffle(ctx.guild.id) else "False :x:"
+						"True :white_check_mark:" if bot_shuffle(ctx.guild.id) else "False :x:"
 					),
 					inline=True)
 	embed.add_field(name="Announce songs :mega:",
 					value="Songs will be announced when played\n\nEnabled: {}".format(
-						"True :white_check_mark:" if main.bot_announce(ctx.guild.id) else "False :x:"
+						"True :white_check_mark:" if bot_announce(ctx.guild.id) else "False :x:"
 					),
 					inline=True)
 	embed.add_field(name="Loop songs :repeat:",
 					value="The current song will loop while the setting is true\n\nEnabled: {}".format(
-						"True :white_check_mark:" if main.bot_loop(ctx.guild.id) else "False :x:"
+						"True :white_check_mark:" if bot_loop(ctx.guild.id) else "False :x:"
 					),
 					inline=True)
 	await ctx.followup.send(embed=embed)
@@ -38,7 +38,7 @@ class Settings(commands.Cog):
 		self.bot = bot
 
 	@slash_command(name="settings",
-				   guild_ids=main.bot.guild_ids)
+				   guild_ids=bot.guild_ids)
 	async def settings_(self, ctx):
 		pass
 

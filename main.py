@@ -5,7 +5,7 @@ from nextcord.ext import commands
 
 bot = commands.Bot()
 bot.remove_command('help')
-icon = "https://i.imgur.com/Rygy2KWs.jpg"
+bot.icon = "https://i.imgur.com/Rygy2KWs.jpg"
 
 with open("secrets.json", "r") as file:
 	bot.secrets = json.load(file)
