@@ -6,6 +6,7 @@ from nextcord.ext import commands
 bot = commands.Bot()
 bot.remove_command('help')
 bot.icon = "https://i.imgur.com/Rygy2KWs.jpg"
+bot.mc_uuids = {}
 
 with open("secrets.json", "r") as file:
 	bot.secrets = json.load(file)
@@ -16,7 +17,8 @@ modules = [
 	'seek',
 	'settings',
 	'help',
-	'search'
+	'search',
+	'wynncraft'
 ]
 
 
