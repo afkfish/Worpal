@@ -46,6 +46,8 @@ jobs:
           images: |
             afkfish/worpal
             ghcr.io/${{ github.repository }}
+          flavor: |
+            latest=true
           
       - name: Build and push
         uses: docker/build-push-action@v3
