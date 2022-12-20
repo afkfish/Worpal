@@ -18,7 +18,7 @@ class Wynncraft(commands.Cog):
 				   username: str = SlashOption(name="username", description="The player's username", required=True)):
 		await ctx.response.defer()
 
-		meta = self.get_wc_info(username)
+		meta = self.get_wc_info(username.lower())
 		if not meta:
 			await ctx.followup.send(f"Error getting {username}'s info")
 			return
@@ -38,21 +38,21 @@ class Wynncraft(commands.Cog):
 	async def avatar(self, ctx,
 					 username: str = SlashOption(name="username", description="The player's username", required=True)):
 		await ctx.response.defer()
-		avatar = self.get_avatar(username)
+		avatar = self.get_avatar(username.lower())
 		await ctx.followup.send(avatar if avatar is True else "Error getting avatar!")
 
 	def get_avatar(self, username):
-		if username.lower() in self.bot.mc_uuids:
+		if username in self.bot.mc_uuids:
 			return f"https://minotar.net/avatar/{self.bot.mc_uuids[username]}"
 
 		else:
 			try:
-				payload = [username.lower()]
+				payload = [username]
 				response = post(url="https://api.mojang.com/profiles/minecraft", json=payload).json()
 
 				uuid = response[0]['id']
 
-				self.bot.mc_uuids[username.lower()] = uuid
+				self.bot.mc_uuids[username] = uuid
 				return f"https://minotar.net/avatar/{uuid}"
 
 			except RequestException:
@@ -86,8 +86,6 @@ class Wynncraft(commands.Cog):
 		except RequestException:
 			print(f"Error getting {username}'s info!")
 			return False
-
-
 
 
 def setup(bot):
