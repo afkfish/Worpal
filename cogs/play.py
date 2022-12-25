@@ -234,8 +234,7 @@ class Play(commands.Cog):
 					bot.music_queue[ctx.guild.id].append([song, voice_channel])
 					embed.set_thumbnail(url=bot.music_queue[ctx.guild.id][-1][0]['thumbnail'])
 					embed.add_field(name=bot.music_queue[ctx.guild.id][-1][0]['title'],
-									value=str(dt.timedelta(
-										seconds=int(bot.music_queue[ctx.guild.id][-1][0]['duration']))),
+									value=f"{str(dt.timedelta(seconds=round(bot.music_queue[ctx.guild.id][-1][0]['duration'] / 1000, 0)))}",
 									inline=True)
 					embed.set_footer(text="Song requested by: " + ctx.user.name)
 					await ctx.followup.send(embed=embed)
