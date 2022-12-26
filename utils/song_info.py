@@ -2,7 +2,7 @@ from urllib.parse import urlparse
 
 import googleapiclient.discovery
 import youtube_dl
-from requests import get, post, exceptions
+from requests import post, exceptions
 from youtube_dl import YoutubeDL
 
 from main import bot
@@ -10,27 +10,20 @@ from main import bot
 YDL_OPTIONS = {"format": "bestaudio", "noplaylist": True, "quiet": True}
 
 
-def search_yt(item, multiple: bool = False):
+def search_yt(item):
 	print('Downloading: ' + item)
 	with YoutubeDL(YDL_OPTIONS) as ydl:
 		try:
-			try:
-				get(item)
-
-			except exceptions.RequestException or exceptions.MissingSchema:
-				if multiple:
-					return ydl.extract_info(f"ytsearch5:{item}", download=False)['entries']
-
-				else:
-					info = ydl.extract_info(f"ytsearch:{item}", download=False)['entries'][0]
+			result = urlparse(item)
+			if all([result.scheme, result.netloc]):
+				info = ydl.extract_info(item, download=False)
 
 			else:
-				info = ydl.extract_info(item, download=False)
+				info = ydl.extract_info(f"ytsearch:{item}", download=False)['entries'][0]
 
 		except youtube_dl.utils.DownloadError:
 			return False
-	return {'source': info['formats'][0]['url'], 'title': info['title'], 'thumbnail': info['thumbnail'],
-			'duration': info['duration']}
+	return {'source': info['formats'][0]['url'], 'title': info['title'], 'thumbnail': info['thumbnail'], 'duration': info['duration']}
 
 
 def search_api(querry: str):
@@ -86,7 +79,8 @@ def get_info(video_id: str):
 			return False
 	except exceptions.RequestException:
 		print("Error in video info")
-		return False
+		# TODO: insert proper youtube link
+		return search_yt("https://youtu.be/watch=" + video_id)
 
 	try:
 		audio_only = [stream for stream in json_data['streamingData']['adaptiveFormats'] if
@@ -97,7 +91,8 @@ def get_info(video_id: str):
 		return ret
 	except KeyError:
 		print(f"{video_id} not available without deciphering")
-		return False
+		# TODO: insert proper youtube link
+		return search_yt("https://youtu.be/watch=" + video_id)
 
 
 def fast_link(item):

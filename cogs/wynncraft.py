@@ -45,18 +45,17 @@ class Wynncraft(commands.Cog):
 		if username in self.bot.mc_uuids:
 			return f"https://minotar.net/avatar/{self.bot.mc_uuids[username]}"
 
-		else:
-			try:
-				payload = [username]
-				response = post(url="https://api.mojang.com/profiles/minecraft", json=payload).json()
+		try:
+			payload = [username]
+			response = post(url="https://api.mojang.com/profiles/minecraft", json=payload).json()
 
-				uuid = response[0]['id']
+			uuid = response[0]['id']
 
-				self.bot.mc_uuids[username] = uuid
-				return f"https://minotar.net/avatar/{uuid}"
+			self.bot.mc_uuids[username] = uuid
+			return f"https://minotar.net/avatar/{uuid}"
 
-			except RequestException:
-				return False
+		except RequestException:
+			return False
 
 	def get_wc_info(self, username: str):
 		try:

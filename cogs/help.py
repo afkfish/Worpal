@@ -1,19 +1,16 @@
 from nextcord import Embed, slash_command
 from nextcord.ext import commands
 
-from main import bot
-
 
 class Help(commands.Cog):
 
 	def __init__(self, bot):
 		self.bot = bot
 
-	@staticmethod
-	async def help_embed(ctx, command: str):
+	async def help_embed(self, ctx, command: str):
 		await ctx.response.defer()
 		embed = Embed(color=0x152875)
-		embed.set_author(name="Worpal", icon_url=bot.icon)
+		embed.set_author(name="Worpal", icon_url=self.bot.icon)
 		match command:
 			case "play":
 				embed.title = "Play :arrow_forward:"
@@ -77,7 +74,7 @@ class Help(commands.Cog):
 				pass
 		await ctx.followup.send(embed=embed)
 
-	@slash_command(name="help", description="Get info on commands.", guild_ids=bot.guild_ids)
+	@slash_command(name="help", description="Get info on commands.")
 	async def help(self, ctx):
 		pass
 

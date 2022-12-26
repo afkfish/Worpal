@@ -6,6 +6,7 @@ from nextcord.ext import commands
 bot = commands.Bot()
 bot.remove_command('help')
 bot.icon = "https://i.imgur.com/Rygy2KWs.jpg"
+bot.color = 0x152875
 bot.mc_uuids = {}
 
 with open("secrets.json", "r") as file:
@@ -17,7 +18,7 @@ modules = [
 	'seek',
 	'settings',
 	'help',
-	'search',
+	# 'search', TODO: fix search with api
 	'wynncraft'
 ]
 
@@ -83,11 +84,10 @@ async def on_voice_state_update(member, before, after):
 			if len(voice.channel.members) == 1:
 				bot.music_queue[member.guild.id] = []
 				voice.stop()
-				await voice.disconnect()
+				await voice.disconnect(force=True)
 
 
-@bot.slash_command(description="Load cogs",
-				   guild_ids=[940575531567546369])
+@bot.slash_command(description="Load cogs", guild_ids=[940575531567546369])
 async def load(ctx, cog_):
 	await ctx.response.defer()
 	try:
@@ -99,8 +99,7 @@ async def load(ctx, cog_):
 										f"\nError: {cog_}\n{type(ex).__name__}: {ex}")
 
 
-@bot.slash_command(description="Unload cogs",
-				   guild_ids=[940575531567546369])
+@bot.slash_command(description="Unload cogs", guild_ids=[940575531567546369])
 async def unload(ctx, cog_):
 	await ctx.response.defer()
 	try:
@@ -112,8 +111,7 @@ async def unload(ctx, cog_):
 										f"\nError: {cog_}\n{type(ex).__name__}: {ex}")
 
 
-@bot.slash_command(description="Reload cogs",
-				   guild_ids=[940575531567546369])
+@bot.slash_command(description="Reload cogs", guild_ids=[940575531567546369])
 async def reload(ctx, cog_):
 	await ctx.response.defer()
 	try:
