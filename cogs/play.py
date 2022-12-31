@@ -115,7 +115,7 @@ class Play(commands.Cog):
 		self.bot = bot
 
 	def play_next(self, ctx):
-		if len(self.bot.music_queue[ctx.guild.id]) < 0:
+		if len(self.bot.music_queue[ctx.guild.id]) <= 0:
 			return
 
 		vc = utils.get(self.bot.voice_clients, guild=ctx.guild)
@@ -189,8 +189,8 @@ class Play(commands.Cog):
 		), color=self.bot.color)
 		embed.set_author(name="Worpal", icon_url=self.bot.icon)
 
+		voice_channel = ctx.user.voice.channel
 		if "open.spotify.com" not in music:
-			voice_channel = ctx.user.voice.channel
 			song = fast_link(music)
 			if not song:
 				await ctx.followup.send(content="Cannot play the song. "
@@ -200,11 +200,12 @@ class Play(commands.Cog):
 			self.bot.music_queue[ctx.guild.id].append([song, voice_channel])
 			embed.set_thumbnail(url=self.bot.music_queue[ctx.guild.id][-1][0]['thumbnail'])
 			embed.add_field(name=self.bot.music_queue[ctx.guild.id][-1][0]['title'],
-							value=f"{str(dt.timedelta(seconds=round(self.bot.music_queue[ctx.guild.id][-1][0]['duration'] / 1000, 0)))}",
+							value=f"{str(dt.timedelta(seconds=round(int(self.bot.music_queue[ctx.guild.id][-1][0]['duration']) / 1000, 0)))}",
 							inline=True)
 			embed.set_footer(text="Song requested by: " + ctx.user.name)
 			await ctx.followup.send(embed=embed)
 			await self.play_music(ctx)
+			return
 
 		if "/track" in music:
 			# https://open.spotify.com/track/5oKRyAx215xIycigG6NNwt?si=834b843759b84497
@@ -218,7 +219,7 @@ class Play(commands.Cog):
 			embed.set_thumbnail(url=song['album']['images'][0]['url'])
 			embed.add_field(name=f"{song['name']}\n\n",
 							value=f"{artists}\n"
-								  f"{str(dt.timedelta(seconds=round(song['duration_ms'] / 1000, 0)))}")
+								  f"{str(dt.timedelta(seconds=round(int(song['duration_ms']) / 1000, 0)))}")
 			self.bot.query[ctx.guild.id].append(f"{song['name']}\t{artists}")
 
 		elif "/playlist" in music:
@@ -236,8 +237,8 @@ class Play(commands.Cog):
 							value=f"{playlist['owner']['display_name']}\n")
 
 		embed.set_footer(text="Song requested by: " + ctx.user.name)
-		voice_channel = ctx.user.voice.channel
-		track = fast_link(self.bot.query[ctx.guild.id][0])
+		if len(self.bot.query) > 0:
+			track = fast_link(self.bot.query[ctx.guild.id][0])
 
 		if not track:
 			await ctx.followup.send(content="Cannot play the song. Could be an incorrect input or the content is "
