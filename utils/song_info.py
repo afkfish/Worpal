@@ -11,7 +11,7 @@ YDL_OPTIONS = {"format": "bestaudio", "noplaylist": True, "quiet": True}
 
 
 def search_yt(item):
-	print('Downloading: ' + item)
+	print(f"YoutubeDL: {item}")
 	with YoutubeDL(YDL_OPTIONS) as ydl:
 		try:
 			result = urlparse(item)
@@ -79,8 +79,7 @@ def get_info(video_id: str):
 			return False
 	except exceptions.RequestException:
 		print("Error in video info")
-		# TODO: insert proper youtube link
-		return search_yt("https://youtu.be/watch=" + video_id)
+		return search_yt("https://youtu.be/watch?v=" + video_id)
 
 	try:
 		audio_only = [stream for stream in json_data['streamingData']['adaptiveFormats'] if
@@ -91,8 +90,7 @@ def get_info(video_id: str):
 		return ret
 	except KeyError:
 		print(f"{video_id} not available without deciphering")
-		# TODO: insert proper youtube link
-		return search_yt("https://youtu.be/watch=" + video_id)
+		return search_yt("https://youtu.be/watch?v=" + video_id)
 
 
 def fast_link(item):
