@@ -1,4 +1,5 @@
 import json
+import logging
 
 from nextcord import utils
 from nextcord.ext import commands
@@ -8,6 +9,9 @@ bot.remove_command('help')
 bot.icon = "https://i.imgur.com/Rygy2KWs.jpg"
 bot.color = 0x152875
 bot.mc_uuids = {}
+
+logging.basicConfig(level=logging.INFO)
+LOGGER = logging.getLogger('main')
 
 with open("secrets.json", "r") as file:
 	bot.secrets = json.load(file)
@@ -49,7 +53,7 @@ bot.guild_ids = []
 
 @bot.event
 async def on_ready():
-	print(f"Logged in as {bot.user}!")
+	LOGGER.info(f"Logged in as {bot.user}!")
 	with open('./settings/settings.json', 'r') as f:
 		data = json.load(f)
 	for guild in bot.guilds:
@@ -94,7 +98,7 @@ async def load(ctx, cog_):
 		bot.load_extension(f'cogs.{cog_}')
 		await ctx.followup.send(content="Succefully loaded {}".format(cog_))
 	except Exception as ex:
-		print(f'Failed to load cog {cog_}\n{type(ex).__name__}: {ex}')
+		LOGGER.error(f'Failed to load cog {cog_}\n{type(ex).__name__}: {ex}')
 		await ctx.followup.send(content=f"Loading {cog_} was unsuccesful"
 										f"\nError: {cog_}\n{type(ex).__name__}: {ex}")
 
@@ -106,7 +110,7 @@ async def unload(ctx, cog_):
 		bot.unload_extension(f'cogs.{cog_}')
 		await ctx.followup.send(content=f"Succefully unloaded {cog_}")
 	except Exception as ex:
-		print(f'Failed to unload cog {cog_}\n{type(ex).__name__}: {ex}')
+		LOGGER.error(f'Failed to unload cog {cog_}\n{type(ex).__name__}: {ex}')
 		await ctx.followup.send(content=f"Unloading {cog_} was unsuccesful"
 										f"\nError: {cog_}\n{type(ex).__name__}: {ex}")
 
@@ -119,7 +123,7 @@ async def reload(ctx, cog_):
 		bot.load_extension(f'cogs.{cog_}')
 		await ctx.followup.send(content=f"Succefully reloaded {cog_}")
 	except Exception as ex:
-		print(f'Failed to reload cog {cog_}\n{type(ex).__name__}: {ex}')
+		LOGGER.error(f'Failed to reload cog {cog_}\n{type(ex).__name__}: {ex}')
 		await ctx.followup.send(content=f"Reloading {cog_} was unsuccesful"
 										f"\nError: {cog_}\n{type(ex).__name__}: {ex}")
 
@@ -133,6 +137,6 @@ for cog in modules:
 	try:
 		bot.load_extension(f"cogs.{cog}")
 	except Exception as e:
-		print(f"Failed to load cog {cog}: {type(e).__name__}, {e}")
+		LOGGER.error(f"Failed to load cog {cog}: {type(e).__name__}, {e}")
 
 bot.run(bot.secrets["discord"]["app_key"])

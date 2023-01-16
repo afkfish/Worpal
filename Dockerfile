@@ -10,4 +10,4 @@ RUN apt-get update && apt-get install python3-dev \
 RUN LIBSODIUM_MAKE_ARGS=-j4 pip3 install -r requirements.txt
 RUN apt-get install ffmpeg -y
 COPY . .
-CMD ["python3", "main.py"]
+ENTRYPOINT ["python3", "main.py"]

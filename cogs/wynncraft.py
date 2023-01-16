@@ -1,7 +1,11 @@
+import logging
+
 from nextcord import slash_command, SlashOption, Embed
 from nextcord.ext import commands
 from requests import get, post
 from requests.exceptions import RequestException
+
+LOGGER = logging.getLogger("Wynncraft")
 
 
 class Wynncraft(commands.Cog):
@@ -9,7 +13,8 @@ class Wynncraft(commands.Cog):
 		self.bot = bot
 		self.url = "https://web-api.wynncraft.com/api/v3/"
 
-	@slash_command(name="wc", description="Wynncraft parent command", guild_ids=[940575531567546369, 663825004256952342])
+	@slash_command(name="wc", description="Wynncraft parent command",
+				   guild_ids=[940575531567546369, 663825004256952342])
 	async def wc(self, ctx):
 		pass
 
@@ -20,10 +25,13 @@ class Wynncraft(commands.Cog):
 
 		meta = self.get_wc_info(username.lower())
 		if not meta:
+			LOGGER.error(f"Error getting {username}'s info!")
 			await ctx.followup.send(f"Error getting {username}'s info")
 			return
 
-		embed = Embed(title=f"{'['+meta['shortenedRank']+']' if meta['shortenedRank'] is not None else ''} {username}'s info", color=meta['rank'])
+		embed = Embed(
+			title=f"{'[' + meta['shortenedRank'] + ']' if meta['shortenedRank'] is not None else ''} {username}'s info",
+			color=meta['rank'])
 		embed.set_thumbnail(url=meta['avatar'])
 		embed.add_field(name="First joined", value=meta['firstJoin'][:10], inline=True)
 		embed.add_field(name="Last joined", value=meta['lastJoin'][:10], inline=True)
@@ -39,7 +47,7 @@ class Wynncraft(commands.Cog):
 					 username: str = SlashOption(name="username", description="The player's username", required=True)):
 		await ctx.response.defer()
 		avatar = self.get_avatar(username.lower())
-		await ctx.followup.send(avatar if avatar is True else "Error getting avatar!")
+		await ctx.followup.send(avatar if avatar else "Error getting avatar!")
 
 	def get_avatar(self, username):
 		if username in self.bot.mc_uuids:
@@ -55,6 +63,7 @@ class Wynncraft(commands.Cog):
 			return f"https://minotar.net/avatar/{uuid}"
 
 		except RequestException:
+			LOGGER.error(f"Error getting {username}'s avatar!")
 			return False
 
 	def get_wc_info(self, username: str):
@@ -83,7 +92,7 @@ class Wynncraft(commands.Cog):
 				'playtime': meta['playtime']
 			}
 		except RequestException:
-			print(f"Error getting {username}'s info!")
+			LOGGER.error(f"Error getting {username}'s info!")
 			return False
 
 

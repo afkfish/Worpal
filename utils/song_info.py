@@ -1,3 +1,5 @@
+import datetime as dt
+import logging
 from urllib.parse import urlparse
 
 import googleapiclient.discovery
@@ -8,22 +10,27 @@ from youtube_dl import YoutubeDL
 from main import bot
 
 YDL_OPTIONS = {"format": "bestaudio", "noplaylist": True, "quiet": True}
+LOGGER = logging.getLogger("YouTube search")
 
 
 def search_yt(item):
-	print(f"YoutubeDL: {item}")
+	LOGGER.info(f"YoutubeDL search: {item}")
 	with YoutubeDL(YDL_OPTIONS) as ydl:
 		try:
 			result = urlparse(item)
 			if all([result.scheme, result.netloc]):
+				LOGGER.info(f"YoutubeDL by link")
 				info = ydl.extract_info(item, download=False)
 
 			else:
+				LOGGER.info(f"YoutubeDL by search")
 				info = ydl.extract_info(f"ytsearch:{item}", download=False)['entries'][0]
 
 		except youtube_dl.utils.DownloadError:
+			LOGGER.error(f"YoutubeDL error")
 			return False
-	return {'source': info['formats'][0]['url'], 'title': info['title'], 'thumbnail': info['thumbnail'], 'duration': info['duration']}
+	LOGGER.info(f"YoutubeDL result: {info['title']}")
+	return {'source': info['formats'][0]['url'], 'title': info['title'], 'thumbnail': info['thumbnail'], 'duration': dt.timedelta(milliseconds=int(info['duration'])).seconds}
 
 
 def search_api(querry: str):
@@ -76,9 +83,10 @@ def get_info(video_id: str):
 		res = post(magic_url, headers=headers, params={"key": embed_key}, json=payload_data)
 		json_data = res.json()
 		if res.status_code != 200:
+			LOGGER.error(f"YouTube API error: {res.status_code}")
 			return False
 	except exceptions.RequestException:
-		print("Error in video info")
+		LOGGER.error(f"YouTube API error, trying with YoutubeDL")
 		return search_yt("https://youtu.be/watch?v=" + video_id)
 
 	try:
@@ -86,17 +94,19 @@ def get_info(video_id: str):
 					  'opus' in stream['mimeType'] and 'AUDIO_QUALITY_MEDIUM' == stream['audioQuality']]
 		ret = {'source': audio_only[0]['url'], 'title': json_data['videoDetails']['title'],
 			   'thumbnail': json_data['videoDetails']['thumbnail']['thumbnails'][-1]['url'],
-			   'duration': audio_only[0]['approxDurationMs']}
+			   'duration': dt.timedelta(milliseconds=int(audio_only[0]['approxDurationMs'])).seconds}
 		return ret
 	except KeyError:
-		print(f"{video_id} not available without deciphering")
+		LOGGER.error(f"{json_data['videoDetails']['title']} is MDR locked")
 		return search_yt("https://youtu.be/watch?v=" + video_id)
 
 
 def fast_link(item):
 	result = urlparse(item)
 	if all([result.scheme, result.netloc]):
+		LOGGER.info(f"YouTube link detected")
 		return get_info(item.split("v=")[-1])
 	else:
+		LOGGER.info(f"YouTube search detected")
 		music_id = search_api(item)
 		return get_info(music_id)
