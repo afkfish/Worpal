@@ -4,6 +4,7 @@ from nextcord import slash_command, SlashOption, Embed, ui, ButtonStyle
 from nextcord.ext import commands
 
 from cogs.play import Play
+from main import bot
 from utils.song_info import search_yt
 
 
@@ -60,7 +61,7 @@ class Search(commands.Cog):
 		if songs:
 			view = Selector()
 			embed = Embed(title=f"Search results for {q}", color=0x152875)
-			embed.set_author(name="Worpal", icon_url=self.bot.icon)
+			embed.set_author(name="Worpal", icon_url=bot.icon)
 			cropped = [{'source': song['formats'][0]['url'], 'title': song['title'], 'thumbnail': song['thumbnail'],
 						'duration': song['duration']} for song in songs]
 			a = ""
@@ -73,12 +74,12 @@ class Search(commands.Cog):
 			if ctx.user.voice:
 				voice_channel = ctx.user.voice.channel
 				if view.value is not None:
-					self.bot.music_queue[ctx.guild.id].append([cropped[view.value - 1], voice_channel])
+					bot.music_queue[ctx.guild.id].append([cropped[view.value - 1], voice_channel])
 					embed = Embed(title="Song added from search", color=0x152875)
-					embed.set_thumbnail(url=self.bot.music_queue[ctx.guild.id][-1][0]['thumbnail'])
-					embed.add_field(name=self.bot.music_queue[ctx.guild.id][-1][0]['title'],
+					embed.set_thumbnail(url=bot.music_queue[ctx.guild.id][-1][0]['thumbnail'])
+					embed.add_field(name=bot.music_queue[ctx.guild.id][-1][0]['title'],
 									value=str(dt.timedelta(
-										seconds=int(self.bot.music_queue[ctx.guild.id][-1][0]['duration']))),
+										seconds=int(bot.music_queue[ctx.guild.id][-1][0]['duration']))),
 									inline=True)
 					embed.set_footer(text="Song requested by: " + ctx.user.name)
 					await ctx.send(embed=embed)

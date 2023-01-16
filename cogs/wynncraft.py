@@ -5,6 +5,8 @@ from nextcord.ext import commands
 from requests import get, post
 from requests.exceptions import RequestException
 
+from main import bot
+
 LOGGER = logging.getLogger("Wynncraft")
 
 
@@ -50,8 +52,8 @@ class Wynncraft(commands.Cog):
 		await ctx.followup.send(avatar if avatar else "Error getting avatar!")
 
 	def get_avatar(self, username):
-		if username in self.bot.mc_uuids:
-			return f"https://minotar.net/avatar/{self.bot.mc_uuids[username]}"
+		if username in bot.mc_uuids:
+			return f"https://minotar.net/avatar/{bot.mc_uuids[username]}"
 
 		try:
 			payload = [username]
@@ -59,7 +61,7 @@ class Wynncraft(commands.Cog):
 
 			uuid = response[0]['id']
 
-			self.bot.mc_uuids[username] = uuid
+			bot.mc_uuids[username] = uuid
 			return f"https://minotar.net/avatar/{uuid}"
 
 		except RequestException:
