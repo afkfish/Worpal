@@ -68,7 +68,7 @@ class Navigation(commands.Cog):
 			bot.music_queue[ctx.guild.id] = res
 		embed = Embed(title="Duplicated songs cleared! :broom:", color=bot.color)
 		embed.set_author(name="Worpal", icon_url=bot.icon)
-		songs = slist(self.bot, ctx)
+		songs = slist(ctx)
 		if songs != "":
 			embed.add_field(name="Songs: ", value=songs, inline=True)
 		else:

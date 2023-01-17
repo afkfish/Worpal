@@ -22,7 +22,7 @@ class Seek(commands.Cog):
 			await ctx.followup.send(content='You need to play a song before you can seek in it.')
 			return
 
-		m_url = bot.playing[ctx.guild.id][0]['source']
+		m_url = bot.playing[ctx.guild.id][0].source
 
 		if voice_channel is None:
 			await ctx.followup.send(content='You need to be in a voice channel to use this command.')
@@ -31,7 +31,7 @@ class Seek(commands.Cog):
 		if voice == "" or voice is None:
 			voice = await bot.playing[ctx.guild.id][1].connect()
 
-		elif voice.channel != bot.playing[ctx.guild.id][0][1]:
+		elif voice.channel != bot.playing[ctx.guild.id][1]:
 			await voice.move_to(bot.playing[ctx.guild.id][1])
 
 		formatted_time = dt.timedelta(seconds=int(time))
@@ -44,7 +44,7 @@ class Seek(commands.Cog):
 		bot.playing[ctx.guild.id][-1] = dt.datetime.utcnow() - dt.timedelta(seconds=int(time))
 		# send a message saying the bot is now playing the song
 		await ctx.followup.send(
-			content=f'Now playing {bot.playing[ctx.guild.id][0]["title"]} from {formatted_time} seconds.')
+			content=f'Now playing {bot.playing[ctx.guild.id][0].title} from {formatted_time} seconds.')
 
 
 # add the cog to the bot
