@@ -8,7 +8,7 @@ import youtube_dl
 from requests import post, exceptions
 from youtube_dl import YoutubeDL
 
-from types.Track import Track
+from structures.track import Track
 from main import bot
 
 YDL_OPTIONS = {"format": "bestaudio", "noplaylist": True, "quiet": True}

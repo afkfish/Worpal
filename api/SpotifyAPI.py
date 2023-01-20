@@ -3,7 +3,8 @@ from urllib.parse import urlencode
 
 import requests
 
-from types.Track import Track, PlayList
+from structures.track import Track
+from structures.playlist import PlayList
 from main import bot
 
 
