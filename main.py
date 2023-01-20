@@ -7,7 +7,7 @@ from nextcord.ext import commands
 bot = commands.Bot()
 bot.remove_command('help')
 bot.icon = "https://i.imgur.com/Rygy2KWs.jpg"
-bot.color = 0x152875
+bot.color = 0x0b9ebc
 bot.mc_uuids = {}
 
 logging.basicConfig(level=logging.INFO)
