@@ -4,8 +4,6 @@ import logging
 from nextcord import utils
 from nextcord.ext import commands
 
-from Track import Track
-
 bot = commands.Bot()
 bot.remove_command('help')
 bot.icon = "https://i.imgur.com/Rygy2KWs.jpg"

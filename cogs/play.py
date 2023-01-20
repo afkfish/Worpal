@@ -5,10 +5,11 @@ import re
 from nextcord import Embed, utils, SlashOption, slash_command, FFmpegPCMAudio, ui, ButtonStyle
 from nextcord.ext import commands
 
-from Track import Track, PlayList
+from structures.track import Track
+from structures.playlist import PlayList
 from main import bot, bot_loop, bot_announce, bot_shuffle
-from utils.song_info import fast_link
-from utils.SpotifyAPI import SpotifyApi
+from api.YouTubeAPI import get_link
+from api.SpotifyAPI import SpotifyApi
 
 JSON_FORMAT = {'name': '', 'songs': []}
 FFMPEG_OPTIONS = "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
@@ -16,7 +17,7 @@ FFMPEG_OPTIONS = "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
 
 async def process_query(ctx, vc, playlist: PlayList):
 	for track in playlist.tracks:
-		track = fast_link(track)
+		track = get_link(track)
 		playlist.tracks.pop(0)
 		if track.is_valid():
 			bot.music_queue[ctx.guild.id].append([track, vc])
@@ -178,7 +179,7 @@ class Play(commands.Cog):
 
 		voice_channel = ctx.user.voice.channel
 		if "open.spotify.com" not in query:
-			track = fast_link(track)
+			track = get_link(track)
 			if not track.is_valid():
 				await ctx.followup.send(content="Couldn't play the song.", ephemeral=True)
 				return
@@ -203,7 +204,7 @@ class Play(commands.Cog):
 			ctx.followup.send(embed=playlist.get_embed())
 			track = playlist.tracks[0]
 
-		track = fast_link(track)
+		track = get_link(track)
 		if not track.is_valid():
 			await ctx.followup.send(content="Couldn't play the song.", ephemeral=True)
 			return
@@ -245,7 +246,7 @@ class Play(commands.Cog):
 
 		voice.stop()
 		track = Track(query=query, user=ctx.user)
-		track = fast_link(track)
+		track = get_link(track)
 
 		if not track.is_valid():
 			await ctx.followup.send(content="Couldn't play the song.", ephemeral=True)
@@ -305,7 +306,7 @@ class Play(commands.Cog):
 # 	with open("./playlists/{}.json".format(playlist_name), "r") as f:
 # 		data = json.load(f)
 # 	for item in data['songs']:
-# 		vc = utils.get(bot.voice_clients, guild=ctx.guild)
+# 		vc = api.get(bot.voice_clients, guild=ctx.guild)
 # 		voice_channel = ctx.user.voice.channel
 # 		if voice_channel is None:
 # 			await ctx.response.send_message("Connect to a voice channel!")

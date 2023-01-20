@@ -39,24 +39,3 @@ class Track:
 
 	def is_valid(self):
 		return False if self.title is None or self.source is None else True
-
-
-class PlayList:
-	def __init__(
-			self,
-			name: str,
-			image: str = None,
-			owner: str = None,
-			tracks: [Track] = None
-	):
-		self.name = name
-		self.image = image
-		self.owner = owner
-		self.tracks = tracks
-
-	def get_embed(self) -> Embed:
-		embed = Embed(color=0x152875, title="Playlist added from spotify")
-		embed.set_thumbnail(self.image)
-		embed.add_field(name=self.name, value=self.owner, inline=False)
-
-		return embed

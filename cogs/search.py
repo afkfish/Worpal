@@ -3,9 +3,9 @@ import datetime as dt
 from nextcord import slash_command, SlashOption, Embed, ui, ButtonStyle
 from nextcord.ext import commands
 
+from api.YouTubeAPI import youtube_api_search
 from cogs.play import Play
 from main import bot
-from utils.song_info import search_yt
 
 
 class Selector(ui.View):
@@ -57,7 +57,7 @@ class Search(commands.Cog):
 	async def search_(self, ctx,
 					  q: str = SlashOption(name="title", description="The video to be found.", required=True)):
 		await ctx.response.defer()
-		songs = search_yt(q)
+		songs = youtube_api_search(q)
 		if songs:
 			view = Selector()
 			embed = Embed(title=f"Search results for {q}", color=0x152875)

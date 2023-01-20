@@ -1,5 +1,4 @@
 import datetime as dt
-import json
 import logging
 import re
 from urllib.parse import urlparse
@@ -9,14 +8,14 @@ import youtube_dl
 from requests import post, exceptions
 from youtube_dl import YoutubeDL
 
-from Track import Track
+from types.Track import Track
 from main import bot
 
 YDL_OPTIONS = {"format": "bestaudio", "noplaylist": True, "quiet": True}
 LOGGER = logging.getLogger("YouTube search")
 
 
-def search_yt(track: Track) -> Track:
+def youtubedl_search(track: Track) -> Track:
 	LOGGER.info(f"YoutubeDL search: {track.query}")
 	with YoutubeDL(YDL_OPTIONS) as ydl:
 		try:
@@ -40,7 +39,7 @@ def search_yt(track: Track) -> Track:
 	return track
 
 
-def search_api(track: Track) -> Track:
+def youtube_search(track: Track) -> Track:
 	api_service_name = "youtube"
 	api_version = "v3"
 
@@ -66,7 +65,7 @@ magic_url = "https://www.youtube.com/youtubei/v1/player"
 embed_key = "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8"
 
 
-def get_info(track: Track) -> Track:
+def youtube_api_search(track: Track) -> Track:
 	if track.id is not None:
 		video_id = track.id
 	elif "youtu.be" in track.query:
@@ -80,7 +79,7 @@ def get_info(track: Track) -> Track:
 		'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
 					  'Chrome/88.0.4324.96 Safari/537.36',
 		'content-type': 'application/json',
-		'referer': 'https://www.youtube.com/embed/' + video_id
+		'referer': f'https://www.youtube.com/embed/{video_id}'
 	}
 
 	payload_data = {
@@ -103,7 +102,7 @@ def get_info(track: Track) -> Track:
 			return track
 	except exceptions.RequestException:
 		LOGGER.error(f"YouTube API error, trying with YoutubeDL")
-		return search_yt(track)
+		return youtubedl_search(track)
 
 	try:
 		audio_only = [stream for stream in json_data['streamingData']['adaptiveFormats'] if
@@ -116,15 +115,15 @@ def get_info(track: Track) -> Track:
 		return track
 	except KeyError:
 		LOGGER.error(f"Error in getting {video_id}")
-		return search_yt(track)
+		return youtubedl_search(track)
 
 
-def fast_link(track: Track):
+def get_link(track: Track) -> Track:
 	result = urlparse(track.query)
 	if all([result.scheme, result.netloc]):
 		LOGGER.info(f"YouTube link detected")
-		return get_info(track)
+		return youtube_api_search(track)
 	else:
 		LOGGER.info(f"YouTube search detected")
-		music_id = search_api(track)
-		return get_info(music_id)
+		music_id = youtube_search(track)
+		return youtube_api_search(music_id)
