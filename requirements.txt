@@ -1,5 +1,0 @@
-beautifulsoup4
-nextcord[voice]>=2.3.2
-requests
-google-api-python-client
-youtube_dl>=2021.12.17

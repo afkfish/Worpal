@@ -3,7 +3,7 @@ ENV python3="/usr/local/bin/python3"
 WORKDIR /app
 RUN apt update && apt upgrade -y
 RUN apt install ffmpeg -y
-COPY requirements.txt requirements.txt
-RUN LIBSODIUM_MAKE_ARGS=-j4 pip3 install -r requirements.txt
 COPY . .
+RUN pip3 install pipenv
+RUN pipenv install
 ENTRYPOINT ["python3", "main.py"]
