@@ -1,10 +1,10 @@
 import json
 import logging
 
-from nextcord import utils
+from nextcord import utils, Activity, ActivityType
 from nextcord.ext import commands
 
-bot = commands.Bot()
+bot = commands.Bot(activity=Activity(name="/play", type=ActivityType.listening))
 bot.remove_command('help')
 bot.icon = "https://i.imgur.com/Rygy2KWs.jpg"
 bot.color = 0x0b9ebc
