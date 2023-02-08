@@ -3,16 +3,16 @@ import json
 from nextcord import SlashOption, slash_command, Embed
 from nextcord.ext import commands
 
-from main import bot, bot_shuffle, bot_loop, bot_announce
+from main import bot_shuffle, bot_loop, bot_announce
 
 bool_str = ["1", "true", "yes", "y", "t"]
 
 
-async def settings_embed(ctx):
+async def settings_embed(bot, ctx):
 	embed = Embed(title="Settings",
 				  description="The setting related to the bot",
-				  color=bot.color)
-	embed.set_author(name="Worpal", icon_url=bot.icon)
+				  color=bot.worp.color)
+	embed.set_author(name="Worpal", icon_url=bot.worp.icon)
 	embed.add_field(name="Shuffle play :twisted_rightwards_arrows:",
 					value="Plays the songs shuffled\n\nEnabled: {}".format(
 						"True :white_check_mark:" if bot_shuffle(ctx.guild.id) else "False :x:"
@@ -53,7 +53,7 @@ class Settings(commands.Cog):
 			data[str(ctx.guild.id)]['shuffle'] = False
 		with open('./settings/settings.json', 'w') as f:
 			json.dump(data, f, indent=4)
-		await settings_embed(ctx)
+		await settings_embed(self.bot, ctx)
 
 	@settings_.subcommand(name="announce_songs", description="Turns on/off announce")
 	async def settings_announce(self, ctx, announce_songs: str = SlashOption(name="announce_songs",
@@ -68,7 +68,7 @@ class Settings(commands.Cog):
 			data[str(ctx.guild.id)]['announce'] = False
 		with open('./settings/settings.json', 'w') as f:
 			json.dump(data, f, indent=4)
-		await settings_embed(ctx)
+		await settings_embed(self.bot, ctx)
 
 
 # @settings_.subcommand(name="loop", description="Turns on/off loop")

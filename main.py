@@ -1,30 +1,96 @@
 import json
 import logging
+import os
 
 from nextcord import utils, Activity, ActivityType
 from nextcord.ext import commands
 
-bot = commands.Bot(activity=Activity(name="/play", type=ActivityType.listening))
-bot.remove_command('help')
-bot.icon = "https://i.imgur.com/Rygy2KWs.jpg"
-bot.color = 0x0b9ebc
-bot.mc_uuids = {}
+from structures.worpal import Worpal
 
-logging.basicConfig(level=logging.INFO)
-LOGGER = logging.getLogger('main')
 
-with open("secrets.json", "r") as file:
-	bot.secrets = json.load(file)
+def main() -> None:
+	logger = setup_logging()
+	with open("secrets.json", "r") as file:
+		secrets = json.load(file)
+	worp = Worpal({}, {}, {}, {}, secrets)
+	bot = setup_bot(logger)
+	bot.worp = worp
 
-modules = [
-	'play',
-	'navigation',
-	'seek',
-	'settings',
-	'help',
-	# 'search', TODO: fix search with api
-	'wynncraft'
-]
+	@bot.event
+	async def on_ready():
+		logger.info(f"Logged in as {bot.user}!")
+		with open('./settings/settings.json', 'r') as f:
+			data = json.load(f)
+		for guild in bot.guilds:
+			if str(guild.id) not in data:
+				data.update({str(guild.id): {'announce': False, 'shuffle': False, 'loop': False}})
+			worp.music_queue[guild.id] = []
+			worp.query[guild.id] = []
+			worp.playing[guild.id] = ''
+		with open('./settings/settings.json', 'w') as f:
+			json.dump(data, f, indent=4)
+
+	@bot.event
+	async def on_guid_join(guild):
+		with open('./settings/settings.json', 'r') as f:
+			data = json.load(f)
+		data.update({str(guild.id): {'announce': False, 'shuffle': False, 'loop': False}})
+		worp.music_queue[guild.id] = []
+		worp.query[guild.id] = []
+		worp.playing[guild.id] = ''
+		with open('./settings/settings.json', 'w') as f:
+			json.dump(data, f, indent=4)
+
+	@bot.event
+	async def on_voice_state_update(member, before, after):
+		voice = utils.get(bot.voice_clients, guild=member.guild)
+		if voice is not None and before.channel is not None:
+			if before.channel.id == voice.channel.id:
+				if len(voice.channel.members) == 1:
+					bot.music_queue[member.guild.id] = []
+					voice.stop()
+					await voice.disconnect(force=True)
+
+	@bot.slash_command(description="Latency test", guild_ids=[940575531567546369])
+	async def ping(ctx):
+		await ctx.followup.send(f"Pong! {round(bot.latency * 1000)}ms")
+
+	bot.run(os.getenv('BOT_TOKEN'))
+
+
+def setup_logging() -> logging.Logger:
+	logger = logging.getLogger('Worpal')
+	logger.setLevel(logging.INFO)
+	logging.basicConfig(
+		level=logging.INFO,
+		format='[%(asctime)s] [%(levelname)s] %(name)s: %(message)s',
+		datefmt='%Y-%m-%d %H:%M:%S'
+	)
+
+	return logger
+
+
+def setup_bot(logger: logging.Logger) -> commands.Bot:
+	bot = commands.Bot(activity=Activity(name="/play", type=ActivityType.listening))
+	bot.remove_command('help')
+
+	modules = [
+		'play',
+		'navigation',
+		'seek',
+		'settings',
+		'help',
+		# 'search', TODO: fix search with api
+		'wynncraft'
+	]
+
+	for cog in modules:
+		try:
+			bot.load_extension(f"cogs.{cog}")
+		except Exception as e:
+			logger.error(f"Failed to load cog {cog}: {type(e).__name__}, {e}")
+
+	return bot
 
 
 def bot_shuffle(guildid):
@@ -45,98 +111,5 @@ def bot_loop(guildid):
 	return bool(data[str(guildid)]['loop'])
 
 
-bot.playing = {}
-bot.music_queue = {}
-bot.query = {}
-bot.guild_ids = []
-
-
-@bot.event
-async def on_ready():
-	LOGGER.info(f"Logged in as {bot.user}!")
-	with open('./settings/settings.json', 'r') as f:
-		data = json.load(f)
-	for guild in bot.guilds:
-		if str(guild.id) not in data:
-			data.update({str(guild.id): {'announce': False, 'shuffle': False, 'loop': False}})
-		bot.guild_ids.append(guild.id)
-		bot.music_queue[guild.id] = []
-		bot.query[guild.id] = []
-		bot.playing[guild.id] = ''
-	with open('./settings/settings.json', 'w') as f:
-		json.dump(data, f, indent=4)
-
-
-@bot.event
-async def on_guid_join(guild):
-	with open('./settings/settings.json', 'r') as f:
-		data = json.load(f)
-	data.update({str(guild.id): {'announce': False, 'shuffle': False, 'loop': False}})
-	bot.guild_ids.append(guild.id)
-	bot.music_queue[guild.id] = []
-	bot.query[guild.id] = []
-	bot.playing[guild.id] = ''
-	with open('./settings/settings.json', 'w') as f:
-		json.dump(data, f, indent=4)
-
-
-@bot.event
-async def on_voice_state_update(member, before, after):
-	voice = utils.get(bot.voice_clients, guild=member.guild)
-	if voice is not None and before.channel is not None:
-		if before.channel.id == voice.channel.id:
-			if len(voice.channel.members) == 1:
-				bot.music_queue[member.guild.id] = []
-				voice.stop()
-				await voice.disconnect(force=True)
-
-
-@bot.slash_command(description="Load cogs", guild_ids=[940575531567546369])
-async def load(ctx, cog_):
-	await ctx.response.defer()
-	try:
-		bot.load_extension(f'cogs.{cog_}')
-		await ctx.followup.send(content="Succefully loaded {}".format(cog_))
-	except Exception as ex:
-		LOGGER.error(f'Failed to load cog {cog_}\n{type(ex).__name__}: {ex}')
-		await ctx.followup.send(content=f"Loading {cog_} was unsuccesful"
-										f"\nError: {cog_}\n{type(ex).__name__}: {ex}")
-
-
-@bot.slash_command(description="Unload cogs", guild_ids=[940575531567546369])
-async def unload(ctx, cog_):
-	await ctx.response.defer()
-	try:
-		bot.unload_extension(f'cogs.{cog_}')
-		await ctx.followup.send(content=f"Succefully unloaded {cog_}")
-	except Exception as ex:
-		LOGGER.error(f'Failed to unload cog {cog_}\n{type(ex).__name__}: {ex}')
-		await ctx.followup.send(content=f"Unloading {cog_} was unsuccesful"
-										f"\nError: {cog_}\n{type(ex).__name__}: {ex}")
-
-
-@bot.slash_command(description="Reload cogs", guild_ids=[940575531567546369])
-async def reload(ctx, cog_):
-	await ctx.response.defer()
-	try:
-		bot.unload_extension(f'cogs.{cog_}')
-		bot.load_extension(f'cogs.{cog_}')
-		await ctx.followup.send(content=f"Succefully reloaded {cog_}")
-	except Exception as ex:
-		LOGGER.error(f'Failed to reload cog {cog_}\n{type(ex).__name__}: {ex}')
-		await ctx.followup.send(content=f"Reloading {cog_} was unsuccesful"
-										f"\nError: {cog_}\n{type(ex).__name__}: {ex}")
-
-
-@bot.slash_command(description="Latency test", guild_ids=[940575531567546369])
-async def ping(ctx):
-	await ctx.followup.send(f"Pong! {round(bot.latency * 1000)}ms")
-
-
-for cog in modules:
-	try:
-		bot.load_extension(f"cogs.{cog}")
-	except Exception as e:
-		LOGGER.error(f"Failed to load cog {cog}: {type(e).__name__}, {e}")
-
-bot.run(bot.secrets["discord"]["app_key"])
+if __name__ == '__main__':
+	main()

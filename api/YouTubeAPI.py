@@ -1,5 +1,6 @@
 import datetime as dt
 import logging
+import os
 import re
 from urllib.parse import urlparse
 
@@ -9,29 +10,28 @@ from requests import post, exceptions
 from youtube_dl import YoutubeDL
 
 from structures.track import Track
-from main import bot
 
 YDL_OPTIONS = {"format": "bestaudio", "noplaylist": True, "quiet": True}
-LOGGER = logging.getLogger("YouTube search")
+logger = logging.getLogger("YouTubeAPI")
 
 
 def youtubedl_search(track: Track) -> Track:
-	LOGGER.info(f"YoutubeDL search: {track.query}")
+	logger.info(f"YoutubeDL search: {track.query}")
 	with YoutubeDL(YDL_OPTIONS) as ydl:
 		try:
 			result = urlparse(track.query)
 			if all([result.scheme, result.netloc]):
-				LOGGER.info(f"YoutubeDL by link")
+				logger.info(f"YoutubeDL by link")
 				info = ydl.extract_info(track.query, download=False)
 
 			else:
-				LOGGER.info(f"YoutubeDL by search")
+				logger.info(f"YoutubeDL by search")
 				info = ydl.extract_info(f"ytsearch:{track.query}", download=False)['entries'][0]
 
 		except youtube_dl.utils.DownloadError:
-			LOGGER.error(f"YoutubeDL error")
+			logger.error(f"YoutubeDL error")
 			return track
-	LOGGER.info(f"YoutubeDL result: {info['title']}")
+	logger.info(f"YoutubeDL result: {info['title']}")
 	track.title = info['title']
 	track.source = info['formats'][0]['url']
 	track.thumbnail = info['thumbnail']
@@ -43,7 +43,7 @@ def youtube_search(track: Track) -> Track:
 	api_service_name = "youtube"
 	api_version = "v3"
 
-	developer_key = bot.secrets["youtube"]["api_key"]
+	developer_key = os.getenv("YOUTUBE_API_KEY")
 
 	youtube = googleapiclient.discovery.build(
 		api_service_name, api_version, developerKey=developer_key)
@@ -71,9 +71,12 @@ def youtube_api_search(track: Track) -> Track:
 	elif "youtu.be" in track.query:
 		video_id = re.search(r"youtu.be/(.+?)", track.query).group(1)
 	elif "watch?v=" in track.query:
-		video_id = re.search(r"watch\?v=(.+?)&", track.query).group(1)
+		video_id = re.search(r"watch\?v=(.+?)", track.query).group(1)
 	else:
 		return track
+
+	if "&" in video_id:
+		video_id = video_id.split("&")[0]
 
 	headers = {
 		'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
@@ -98,10 +101,10 @@ def youtube_api_search(track: Track) -> Track:
 		res = post(magic_url, headers=headers, params={"key": embed_key}, json=payload_data)
 		json_data = res.json()
 		if res.status_code != 200:
-			LOGGER.error(f"YouTube API error: {res.status_code}")
+			logger.error(f"YouTube API error: {res.status_code}")
 			return track
 	except exceptions.RequestException:
-		LOGGER.error(f"YouTube API error, trying with YoutubeDL")
+		logger.error(f"YouTube API error, trying with YoutubeDL")
 		return youtubedl_search(track)
 
 	try:
@@ -110,20 +113,20 @@ def youtube_api_search(track: Track) -> Track:
 		track.title = json_data['videoDetails']['title']
 		track.source = audio_only[0]['url']
 		track.thumbnail = json_data['videoDetails']['thumbnail']['thumbnails'][-1]['url']
-		LOGGER.info("Duration: " + audio_only[0]['approxDurationMs'])
+		logger.info("Duration: " + audio_only[0]['approxDurationMs'])
 		track.duration = dt.timedelta(milliseconds=int(audio_only[0]['approxDurationMs'])).seconds
 		return track
 	except KeyError:
-		LOGGER.error(f"Error in getting {video_id}")
+		logger.error(f"Error in getting {video_id}")
 		return youtubedl_search(track)
 
 
 def get_link(track: Track) -> Track:
 	result = urlparse(track.query)
 	if all([result.scheme, result.netloc]):
-		LOGGER.info(f"YouTube link detected")
+		logger.info(f"YouTube link detected")
 		return youtube_api_search(track)
 	else:
-		LOGGER.info(f"YouTube search detected")
+		logger.info(f"YouTube search detected")
 		music_id = youtube_search(track)
 		return youtube_api_search(music_id)

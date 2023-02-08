@@ -1,12 +1,12 @@
 import logging
+import os
 from urllib.parse import urlencode
 
 import requests
 from bs4 import BeautifulSoup
 
-from main import bot
 
-token = bot.secrets["genius"]["access_token"]
+token = os.getenv("GENIUS_TOKEN")
 headers = {
 	"Authorization": f"Bearer {token}"
 }

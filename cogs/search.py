@@ -5,7 +5,6 @@ from nextcord.ext import commands
 
 from api.YouTubeAPI import youtube_api_search
 from cogs.play import Play
-from main import bot
 
 
 class Selector(ui.View):
@@ -61,7 +60,7 @@ class Search(commands.Cog):
 		if songs:
 			view = Selector()
 			embed = Embed(title=f"Search results for {q}", color=0x152875)
-			embed.set_author(name="Worpal", icon_url=bot.icon)
+			embed.set_author(name="Worpal", icon_url=self.bot.worp.icon)
 			cropped = [{'source': song['formats'][0]['url'], 'title': song['title'], 'thumbnail': song['thumbnail'],
 						'duration': song['duration']} for song in songs]
 			a = ""
@@ -74,12 +73,12 @@ class Search(commands.Cog):
 			if ctx.user.voice:
 				voice_channel = ctx.user.voice.channel
 				if view.value is not None:
-					bot.music_queue[ctx.guild.id].append([cropped[view.value - 1], voice_channel])
+					self.bot.worp.music_queue[ctx.guild.id].append([cropped[view.value - 1], voice_channel])
 					embed = Embed(title="Song added from search", color=0x152875)
-					embed.set_thumbnail(url=bot.music_queue[ctx.guild.id][-1][0]['thumbnail'])
-					embed.add_field(name=bot.music_queue[ctx.guild.id][-1][0]['title'],
+					embed.set_thumbnail(url=self.bot.worp.music_queue[ctx.guild.id][-1][0]['thumbnail'])
+					embed.add_field(name=self.bot.worp.music_queue[ctx.guild.id][-1][0]['title'],
 									value=str(dt.timedelta(
-										seconds=int(bot.music_queue[ctx.guild.id][-1][0]['duration']))),
+										seconds=int(self.bot.worp.music_queue[ctx.guild.id][-1][0]['duration']))),
 									inline=True)
 					embed.set_footer(text="Song requested by: " + ctx.user.name)
 					await ctx.send(embed=embed)

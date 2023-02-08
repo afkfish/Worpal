@@ -1,18 +1,17 @@
 from nextcord import Embed, slash_command
 from nextcord.ext import commands
 
-from main import bot
-
 
 class Help(commands.Cog):
 
 	def __init__(self, bot):
 		self.bot = bot
 
-	async def help_embed(self, ctx, command: str):
+	@staticmethod
+	async def help_embed(ctx, command: str):
 		await ctx.response.defer()
 		embed = Embed(color=0x152875)
-		embed.set_author(name="Worpal", icon_url=bot.icon)
+		embed.set_author(name="Worpal", icon_url=self.bot.worp.icon)
 		match command:
 			case "play":
 				embed.title = "Play :arrow_forward:"
@@ -62,16 +61,16 @@ class Help(commands.Cog):
 				embed.add_field(name="Usage:", value="The np command sends an embed representing the music that is "
 													 "currently being played. If the music stopped or skipped but the "
 													 "queue is empty than the previously played song will be sent.")
-			case "lyrics":
-				embed.title = "Lyrics"
-				embed.add_field(name="Usage:", value="The lyrics command tries to find the song on genius and sends "
-													 "back the lyrics if it succeded. Not every song will 100% have a "
-													 "lyric. If you are sure it has but it is not available on genius "
-													 "than the subtitle command could help.")
-			case "ping":
-				embed.title = "Ping"
-				embed.add_field(name="Usage:", value="The ping command measures the latency from the server to the "
-													 "client in miliseconds.")
+			# case "lyrics":
+			# 	embed.title = "Lyrics"
+			# 	embed.add_field(name="Usage:", value="The lyrics command tries to find the song on genius and sends "
+			# 										 "back the lyrics if it succeded. Not every song will 100% have a "
+			# 										 "lyric. If you are sure it has but it is not available on genius "
+			# 										 "than the subtitle command could help.")
+			# case "ping":
+			# 	embed.title = "Ping"
+			# 	embed.add_field(name="Usage:", value="The ping command measures the latency from the server to the "
+			# 										 "client in miliseconds.")
 			case _:
 				pass
 		await ctx.followup.send(embed=embed)
@@ -123,10 +122,10 @@ class Help(commands.Cog):
 	# @help.subcommand(name="lyrics", description="lyrics command")
 	# async def help_lyrics(self, ctx):
 	#     await self.help_embed(ctx=ctx, command="lyrics")
-
-	@help.subcommand(name="ping", description="ping command")
-	async def help_ping(self, ctx):
-		await self.help_embed(ctx=ctx, command="ping")
+	#
+	# @help.subcommand(name="ping", description="ping command")
+	# async def help_ping(self, ctx):
+	# 	await self.help_embed(ctx=ctx, command="ping")
 
 
 def setup(bot):
