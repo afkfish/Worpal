@@ -5,11 +5,13 @@ from nextcord.ext import commands
 from requests import get, post
 from requests.exceptions import RequestException
 
+from main import Worpal
+
 LOGGER = logging.getLogger("Wynncraft")
 
 
 class Wynncraft(commands.Cog):
-	def __init__(self, bot):
+	def __init__(self, bot: Worpal):
 		self.bot = bot
 		self.url = "https://web-api.wynncraft.com/api/v3/"
 
@@ -50,8 +52,8 @@ class Wynncraft(commands.Cog):
 		await ctx.followup.send(avatar if avatar else "Error getting avatar!")
 
 	def get_avatar(self, username):
-		if username in self.bot.worp.mc_uuids:
-			return f"https://minotar.net/avatar/{self.bot.worp.mc_uuids[username]}"
+		if username in self.bot.mc_uuids:
+			return f"https://minotar.net/avatar/{self.bot.mc_uuids[username]}"
 
 		try:
 			payload = [username]
@@ -59,7 +61,7 @@ class Wynncraft(commands.Cog):
 
 			uuid = response[0]['id']
 
-			self.bot.worp.mc_uuids[username] = uuid
+			self.bot.mc_uuids[username] = uuid
 			return f"https://minotar.net/avatar/{uuid}"
 
 		except RequestException:

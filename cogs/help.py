@@ -1,17 +1,18 @@
-from nextcord import Embed, slash_command
+from nextcord import Embed, slash_command, Interaction
 from nextcord.ext import commands
+
+from main import Worpal
 
 
 class Help(commands.Cog):
 
-	def __init__(self, bot):
+	def __init__(self, bot: Worpal):
 		self.bot = bot
 
-	@staticmethod
-	async def help_embed(ctx, command: str):
+	async def help_embed(self, ctx: Interaction, command: str):
 		await ctx.response.defer()
 		embed = Embed(color=0x152875)
-		embed.set_author(name="Worpal", icon_url=self.bot.worp.icon)
+		embed.set_author(name="Worpal", icon_url=self.bot.icon)
 		match command:
 			case "play":
 				embed.title = "Play :arrow_forward:"
@@ -76,55 +77,55 @@ class Help(commands.Cog):
 		await ctx.followup.send(embed=embed)
 
 	@slash_command(name="help", description="Get info on commands.")
-	async def help(self, ctx):
+	async def help(self, ctx: Interaction):
 		pass
 
 	@help.subcommand(name="play", description="play command")
-	async def help_play(self, ctx):
-		await self.help_embed(ctx=ctx, command="play")
+	async def help_play(self, ctx: Interaction):
+		await self.help_embed(ctx, "play")
 
 	@help.subcommand(name="queue", description="queue command")
-	async def help_queue(self, ctx):
-		await self.help_embed(ctx=ctx, command="queue")
+	async def help_queue(self, ctx: Interaction):
+		await self.help_embed(ctx, "queue")
 
 	@help.subcommand(name="skip", description="skip command")
-	async def help_skip(self, ctx):
-		await self.help_embed(ctx=ctx, command="skip")
+	async def help_skip(self, ctx: Interaction):
+		await self.help_embed(ctx, "skip")
 
 	@help.subcommand(name="pause", description="pause command")
-	async def help_pause(self, ctx):
-		await self.help_embed(ctx=ctx, command="pause")
+	async def help_pause(self, ctx: Interaction):
+		await self.help_embed(ctx, "pause")
 
 	@help.subcommand(name="resume", description="resume command")
-	async def help_resume(self, ctx):
-		await self.help_embed(ctx=ctx, command="resume")
+	async def help_resume(self, ctx: Interaction):
+		await self.help_embed(ctx, "resume")
 
 	@help.subcommand(name="stop", description="stop command")
-	async def help_stop(self, ctx):
-		await self.help_embed(ctx=ctx, command="stop")
+	async def help_stop(self, ctx: Interaction):
+		await self.help_embed(ctx, "stop")
 
 	@help.subcommand(name="leave", description="leave command")
-	async def help_leave(self, ctx):
-		await self.help_embed(ctx=ctx, command="leave")
+	async def help_leave(self, ctx: Interaction):
+		await self.help_embed(ctx, "leave")
 
 	@help.subcommand(name="clear_dumplicates", description="clear duplicates command")
-	async def help_clear_d(self, ctx):
-		await self.help_embed(ctx=ctx, command="clear duplicates")
+	async def help_clear_d(self, ctx: Interaction):
+		await self.help_embed(ctx, "clear duplicates")
 
 	@help.subcommand(name="clear_all", description="clear all command")
-	async def help_clear_a(self, ctx):
-		await self.help_embed(ctx=ctx, command="clear all")
+	async def help_clear_a(self, ctx: Interaction):
+		await self.help_embed(ctx, "clear all")
 
 	@help.subcommand(name="np", description="np command")
-	async def help_np(self, ctx):
-		await self.help_embed(ctx=ctx, command="np")
+	async def help_np(self, ctx: Interaction):
+		await self.help_embed(ctx, "np")
 
 	# @help.subcommand(name="lyrics", description="lyrics command")
-	# async def help_lyrics(self, ctx):
+	# async def help_lyrics(self, ctx: Interaction):
 	#     await self.help_embed(ctx=ctx, command="lyrics")
 	#
 	# @help.subcommand(name="ping", description="ping command")
-	# async def help_ping(self, ctx):
+	# async def help_ping(self, ctx: Interaction):
 	# 	await self.help_embed(ctx=ctx, command="ping")
 
 

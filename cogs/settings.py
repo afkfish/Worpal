@@ -1,31 +1,31 @@
 import json
 
-from nextcord import SlashOption, slash_command, Embed
+from nextcord import SlashOption, slash_command, Embed, Interaction
 from nextcord.ext import commands
 
-from main import bot_shuffle, bot_loop, bot_announce
+from main import Worpal
 
 bool_str = ["1", "true", "yes", "y", "t"]
 
 
-async def settings_embed(bot, ctx):
+async def settings_embed(bot: Worpal, ctx: Interaction):
 	embed = Embed(title="Settings",
 				  description="The setting related to the bot",
-				  color=bot.worp.color)
-	embed.set_author(name="Worpal", icon_url=bot.worp.icon)
+				  color=bot.color)
+	embed.set_author(name="Worpal", icon_url=bot.icon)
 	embed.add_field(name="Shuffle play :twisted_rightwards_arrows:",
 					value="Plays the songs shuffled\n\nEnabled: {}".format(
-						"True :white_check_mark:" if bot_shuffle(ctx.guild.id) else "False :x:"
+						"True :white_check_mark:" if bot.shuffle(ctx.guild.id) else "False :x:"
 					),
 					inline=True)
 	embed.add_field(name="Announce songs :mega:",
 					value="Songs will be announced when played\n\nEnabled: {}".format(
-						"True :white_check_mark:" if bot_announce(ctx.guild.id) else "False :x:"
+						"True :white_check_mark:" if bot.announce(ctx.guild.id) else "False :x:"
 					),
 					inline=True)
 	embed.add_field(name="Loop songs :repeat:",
 					value="The current song will loop while the setting is true\n\nEnabled: {}".format(
-						"True :white_check_mark:" if bot_loop(ctx.guild.id) else "False :x:"
+						"True :white_check_mark:" if bot.looping(ctx.guild.id) else "False :x:"
 					),
 					inline=True)
 	await ctx.followup.send(embed=embed)
@@ -33,7 +33,7 @@ async def settings_embed(bot, ctx):
 
 class Settings(commands.Cog):
 
-	def __init__(self, bot):
+	def __init__(self, bot: Worpal):
 		self.bot = bot
 
 	@slash_command(name="settings")
@@ -41,7 +41,7 @@ class Settings(commands.Cog):
 		pass
 
 	@settings_.subcommand(name="shuffle_play", description="Turns on/off shuffle playing")
-	async def settings_shuffle(self, ctx, shuffle_play: str = SlashOption(name="shuffle_play",
+	async def settings_shuffle(self, ctx: Interaction, shuffle_play: str = SlashOption(name="shuffle_play",
 																		  description="boolean option",
 																		  required=True)):
 		await ctx.response.defer()
@@ -56,7 +56,7 @@ class Settings(commands.Cog):
 		await settings_embed(self.bot, ctx)
 
 	@settings_.subcommand(name="announce_songs", description="Turns on/off announce")
-	async def settings_announce(self, ctx, announce_songs: str = SlashOption(name="announce_songs",
+	async def settings_announce(self, ctx: Interaction, announce_songs: str = SlashOption(name="announce_songs",
 																			 description="boolean option",
 																			 required=True)):
 		await ctx.response.defer()
@@ -69,7 +69,6 @@ class Settings(commands.Cog):
 		with open('./settings/settings.json', 'w') as f:
 			json.dump(data, f, indent=4)
 		await settings_embed(self.bot, ctx)
-
 
 # @settings_.subcommand(name="loop", description="Turns on/off loop")
 # async def settigs_loop(self, ctx, loop: str = SlashOption(name="loop",
