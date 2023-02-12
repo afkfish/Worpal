@@ -6,6 +6,7 @@ from nextcord.ext import commands
 from api.YouTubeAPI import youtube_api_search
 from cogs.play import Play
 from main import Worpal
+from structures.track import Track
 
 
 class Selector(ui.View):
@@ -57,7 +58,7 @@ class Search(commands.Cog):
 	async def search_(self, ctx: Interaction,
 					  q: str = SlashOption(name="title", description="The video to be found.", required=True)):
 		await ctx.response.defer()
-		songs = youtube_api_search(q)
+		songs = youtube_api_search(Track(query=q))
 		if songs:
 			view = Selector()
 			embed = Embed(title=f"Search results for {q}", color=0x152875)
@@ -74,7 +75,7 @@ class Search(commands.Cog):
 			if ctx.user.voice:
 				voice_channel = ctx.user.voice.channel
 				if view.value is not None:
-					self.bot.worp.music_queue[ctx.guild.id].append([cropped[view.value - 1], voice_channel])
+					self.bot.music_queue[ctx.guild.id].append([cropped[view.value - 1], voice_channel])
 					embed = Embed(title="Song added from search", color=0x152875)
 					embed.set_thumbnail(url=self.bot.music_queue[ctx.guild.id][-1][0]['thumbnail'])
 					embed.add_field(name=self.bot.music_queue[ctx.guild.id][-1][0]['title'],

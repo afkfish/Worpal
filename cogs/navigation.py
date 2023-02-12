@@ -27,7 +27,7 @@ class Navigation(commands.Cog):
 		await self.skip(ctx)
 
 	@slash_command(name="pause", description="Pause the song")
-	async def pause_(self, ctx: Interaction):
+	async def pause(self, ctx: Interaction):
 		await ctx.response.defer()
 		voice: VoiceClient = utils.get(self.bot.voice_clients, guild=ctx.guild)
 		if isinstance(voice, VoiceClient) and voice.is_playing():
@@ -38,11 +38,11 @@ class Navigation(commands.Cog):
 		await ctx.followup.send(embed=Embed(title="I'm not playing anything", color=self.bot.color))
 
 	@user_command(name="Pause")
-	async def pause__(self, ctx: Interaction, user):
-		await self.pause_(ctx)
+	async def pause_(self, ctx: Interaction, user):
+		await self.pause(ctx)
 
 	@slash_command(name="resume", description="Resume playing")
-	async def resume_(self, ctx: Interaction):
+	async def resume(self, ctx: Interaction):
 		await ctx.response.defer()
 		voice: VoiceClient = utils.get(self.bot.voice_clients, guild=ctx.guild)
 		if isinstance(voice, VoiceClient) and voice.is_paused():
@@ -53,11 +53,11 @@ class Navigation(commands.Cog):
 		await ctx.followup.send(embed=Embed(title="Playing is not paused", color=self.bot.color))
 
 	@user_command(name="Resume")
-	async def resume__(self, ctx: Interaction, user):
-		await self.resume_(ctx)
+	async def resume_(self, ctx: Interaction, user):
+		await self.resume(ctx)
 
 	@slash_command(name="stop", description="Stop playing")
-	async def stop_(self, ctx: Interaction):
+	async def stop(self, ctx: Interaction):
 		await ctx.response.defer()
 		voice: VoiceClient = utils.get(self.bot.voice_clients, guild=ctx.guild)
 		if isinstance(voice, VoiceClient) and voice is not None:
@@ -68,11 +68,11 @@ class Navigation(commands.Cog):
 		await ctx.followup.send(embed=Embed(title="Error!", color=self.bot.color))
 
 	@user_command(name="Stop")
-	async def stop__(self, ctx: Interaction, user):
-		await self.stop_(ctx)
+	async def stop_(self, ctx: Interaction, user):
+		await self.stop(ctx)
 
 	@slash_command(name="leave", description="Leave voice chat")
-	async def leave_(self, ctx: Interaction):
+	async def leave(self, ctx: Interaction):
 		await ctx.response.defer(ephemeral=True)
 		voice: VoiceClient = utils.get(self.bot.voice_clients, guild=ctx.guild)
 		if voice is not None and isinstance(voice, VoiceClient):
@@ -83,8 +83,8 @@ class Navigation(commands.Cog):
 		await ctx.followup.send(embed=Embed(title="I'm not connected to a voice channel", color=self.bot.color), ephemeral=True)
 
 	@user_command(name="Leave")
-	async def leave__(self, ctx: Interaction, user):
-		await self.leave_(ctx)
+	async def leave_(self, ctx: Interaction, user):
+		await self.leave(ctx)
 
 	@slash_command(name="clear")
 	async def clear(self, ctx: Interaction):
@@ -110,7 +110,7 @@ class Navigation(commands.Cog):
 		await ctx.response.defer()
 		if self.bot.music_queue[ctx.guild.id]:
 			self.bot.music_queue[ctx.guild.id] = []
-		await ctx.followup.send(embed=Embed(title="Queue cleared! :broom:", color=self.bot.worp.color))
+		await ctx.followup.send(embed=Embed(title="Queue cleared! :broom:", color=self.bot.color))
 
 
 def setup(bot):

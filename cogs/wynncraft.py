@@ -1,13 +1,9 @@
-import logging
-
-from nextcord import slash_command, SlashOption, Embed
+from nextcord import slash_command, SlashOption, Embed, Interaction
 from nextcord.ext import commands
 from requests import get, post
 from requests.exceptions import RequestException
 
 from main import Worpal
-
-LOGGER = logging.getLogger("Wynncraft")
 
 
 class Wynncraft(commands.Cog):
@@ -21,13 +17,13 @@ class Wynncraft(commands.Cog):
 		pass
 
 	@wc.subcommand(name="info", description="Get a player's info")
-	async def info(self, ctx,
+	async def info(self, ctx: Interaction,
 				   username: str = SlashOption(name="username", description="The player's username", required=True)):
 		await ctx.response.defer()
 
 		meta = self.get_wc_info(username.lower())
 		if not meta:
-			LOGGER.error(f"Error getting {username}'s info!")
+			self.bot.logger.error(f"Error getting {username}'s info!")
 			await ctx.followup.send(f"Error getting {username}'s info")
 			return
 
@@ -45,7 +41,7 @@ class Wynncraft(commands.Cog):
 		await ctx.followup.send(embed=embed)
 
 	@slash_command(name="avatar", description="Get the player's minecraft avatar", guild_ids=[940575531567546369])
-	async def avatar(self, ctx,
+	async def avatar(self, ctx: Interaction,
 					 username: str = SlashOption(name="username", description="The player's username", required=True)):
 		await ctx.response.defer()
 		avatar = self.get_avatar(username.lower())
@@ -65,7 +61,7 @@ class Wynncraft(commands.Cog):
 			return f"https://minotar.net/avatar/{uuid}"
 
 		except RequestException:
-			LOGGER.error(f"Error getting {username}'s avatar!")
+			self.bot.logger.error(f"Error getting {username}'s avatar!")
 			return False
 
 	def get_wc_info(self, username: str):
@@ -94,7 +90,7 @@ class Wynncraft(commands.Cog):
 				'playtime': meta['playtime']
 			}
 		except RequestException:
-			LOGGER.error(f"Error getting {username}'s info!")
+			self.bot.logger.error(f"Error getting {username}'s info!")
 			return False
 
 

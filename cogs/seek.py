@@ -38,9 +38,12 @@ class Seek(commands.Cog):
 		voice.stop()
 		# play the song with discord.FFmpegPCMaudio
 		voice.play(
-			FFmpegPCMAudio(before_options=f'-ss {time} -reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
-						   source=m_url),
-			after=Play(self.bot).play_next(ctx))
+			FFmpegPCMAudio(
+				before_options=f'-ss {time} -reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
+				source=m_url
+			),
+			after=lambda e: self.bot.logger.error(e) if e else Play(self.bot).play_next(ctx)
+		)
 		self.bot.playing[ctx.guild.id][-1] = dt.datetime.utcnow() - dt.timedelta(seconds=int(time))
 		# send a message saying the bot is now playing the song
 		await ctx.followup.send(

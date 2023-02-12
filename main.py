@@ -18,6 +18,9 @@ class Worpal(commands.Bot):
 		self.mc_uuids = {}
 		self.color = 0x0b9ebc
 		self.icon = "https://i.imgur.com/Rygy2KWs.jpg"
+		self.settings = {}
+		with open('./settings/settings.json', 'r') as f:
+			self.settings = json.load(f)
 
 	async def on_ready(self):
 		self.logger.info(f"Logged in as {self.user}!")
@@ -38,26 +41,18 @@ class Worpal(commands.Bot):
 			except Exception as e:
 				self.logger.error(f"Failed to load cog {cog}: {type(e).__name__}, {e}")
 
-		with open('./settings/settings.json', 'r') as f:
-			data = json.load(f)
 		for guild in self.guilds:
-			if str(guild.id) not in data:
-				data.update({str(guild.id): {'announce': False, 'shuffle': False, 'loop': False}})
+			if str(guild.id) not in self.settings:
+				self.settings.update({str(guild.id): {'announce': False, 'shuffle': False, 'loop': False}})
 			self.music_queue[guild.id] = []
 			self.query[guild.id] = []
 			self.playing[guild.id] = ''
-		with open('./settings/settings.json', 'w') as f:
-			json.dump(data, f, indent=4)
 
 	async def on_guid_join(self, guild):
-		with open('./settings/settings.json', 'r') as f:
-			data = json.load(f)
-		data.update({str(guild.id): {'announce': False, 'shuffle': False, 'loop': False}})
+		self.settings.update({str(guild.id): {'announce': False, 'shuffle': False, 'loop': False}})
 		self.music_queue[guild.id] = []
 		self.query[guild.id] = []
 		self.playing[guild.id] = ''
-		with open('./settings/settings.json', 'w') as f:
-			json.dump(data, f, indent=4)
 
 	async def on_voice_state_update(self, member, before, after):
 		voice: VoiceClient = utils.get(self.voice_clients, guild=member.guild)
@@ -89,6 +84,11 @@ class Worpal(commands.Bot):
 	@slash_command(description="Latency test", guild_ids=[940575531567546369])
 	async def ping(self, ctx):
 		await ctx.followup.send(f"Pong! {round(self.latency * 1000)}ms")
+
+	def __del__(self):
+		self.logger.info("Writing settings to file...")
+		with open('./settings/settings.json', 'w') as f:
+			json.dump(self.settings, f, indent=4)
 
 
 def main() -> None:

@@ -1,5 +1,3 @@
-import json
-
 from nextcord import SlashOption, slash_command, Embed, Interaction
 from nextcord.ext import commands
 
@@ -45,14 +43,10 @@ class Settings(commands.Cog):
 																		  description="boolean option",
 																		  required=True)):
 		await ctx.response.defer()
-		with open('./settings/settings.json', 'r') as f:
-			data = json.load(f)
 		if shuffle_play.lower() in bool_str:
-			data[str(ctx.guild.id)]['shuffle'] = True
+			self.bot.settings[str(ctx.guild.id)]['shuffle'] = True
 		else:
-			data[str(ctx.guild.id)]['shuffle'] = False
-		with open('./settings/settings.json', 'w') as f:
-			json.dump(data, f, indent=4)
+			self.bot.settings[str(ctx.guild.id)]['shuffle'] = False
 		await settings_embed(self.bot, ctx)
 
 	@settings_.subcommand(name="announce_songs", description="Turns on/off announce")
@@ -60,14 +54,10 @@ class Settings(commands.Cog):
 																			 description="boolean option",
 																			 required=True)):
 		await ctx.response.defer()
-		with open('./settings/settings.json', 'r') as f:
-			data = json.load(f)
 		if announce_songs.lower() in bool_str:
-			data[str(ctx.guild.id)]['announce'] = True
+			self.bot.settings[str(ctx.guild.id)]['announce'] = True
 		else:
-			data[str(ctx.guild.id)]['announce'] = False
-		with open('./settings/settings.json', 'w') as f:
-			json.dump(data, f, indent=4)
+			self.bot.settings[str(ctx.guild.id)]['announce'] = False
 		await settings_embed(self.bot, ctx)
 
 # @settings_.subcommand(name="loop", description="Turns on/off loop")
@@ -75,14 +65,10 @@ class Settings(commands.Cog):
 # 														  description="boolean option",
 # 														  required=True)):
 # 	await ctx.response.defer()
-# 	with open('./settings/settings.json', 'r') as f:
-# 		data = json.load(f)
 # 	if loop.lower() in bool_str:
-# 		data[str(ctx.guild.id)]['loop'] = True
+# 		self.bot.settings[str(ctx.guild.id)]['loop'] = True
 # 	else:
-# 		data[str(ctx.guild.id)]['loop'] = False
-# 	with open('./settings/settings.json', 'w') as f:
-# 		json.dump(data, f, indent=4)
+# 		self.bot.settings[str(ctx.guild.id)]['loop'] = False
 # 	await settings_embed(self.bot, ctx)
 
 

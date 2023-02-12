@@ -11,7 +11,7 @@ from youtube_dl import YoutubeDL
 
 from structures.track import Track
 
-YDL_OPTIONS = {"format": "bestaudio", "noplaylist": True, "quiet": True}
+YDL_OPTIONS = {"format": "bestaudio/best", "noplaylist": True, "quiet": True}
 logger = logging.getLogger("YouTubeAPI")
 
 

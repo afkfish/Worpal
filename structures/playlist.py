@@ -1,4 +1,5 @@
 from nextcord import Embed
+
 from structures.track import Track
 
 

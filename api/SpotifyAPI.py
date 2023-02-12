@@ -4,8 +4,8 @@ from urllib.parse import urlencode
 
 import requests
 
-from structures.track import Track
 from structures.playlist import PlayList
+from structures.track import Track
 
 
 class SpotifyApi:

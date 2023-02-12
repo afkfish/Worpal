@@ -5,11 +5,11 @@ import re
 from nextcord import *
 from nextcord.ext import commands
 
-from structures.track import Track
-from structures.playlist import PlayList
-from main import Worpal
-from api.YouTubeAPI import get_link
 from api.SpotifyAPI import SpotifyApi
+from api.YouTubeAPI import get_link
+from main import Worpal
+from structures.playlist import PlayList
+from structures.track import Track
 
 JSON_FORMAT = {'name': '', 'songs': []}
 FFMPEG_OPTIONS = "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
@@ -121,10 +121,10 @@ class Play(commands.Cog):
 		if vc.is_playing():
 			return
 
-		if self.bot.looping(ctx.guild.id):
+		if self.bot.settings[ctx.guild.id]["loop"]:
 			m_url = self.bot.playing[ctx.guild.id][0].source
 
-		elif self.bot.shuffle(ctx.guild.id):
+		elif self.bot.settings[ctx.guild.id]["shuffle"]:
 			entry = random.choice(self.bot.music_queue[ctx.guild.id])
 			m_url = entry[0].source
 			self.bot.playing[ctx.guild.id] = entry[0]
@@ -135,10 +135,17 @@ class Play(commands.Cog):
 			self.bot.playing[ctx.guild.id] = self.bot.music_queue[ctx.guild.id][0]
 			self.bot.music_queue[ctx.guild.id].pop(0)
 
-		if self.bot.announce(ctx.guild.id):
+		if self.bot.settings[ctx.guild.id]["announce"]:
 			announce_song(self.bot, ctx)
 
-		vc.play(FFmpegPCMAudio(source=m_url, before_options=FFMPEG_OPTIONS), after=self.play_next(ctx))
+		vc.play(
+			FFmpegPCMAudio(
+				source=m_url,
+				before_options=FFMPEG_OPTIONS
+			),
+			after=lambda e: self.bot.logger.error(e) and ctx.followup.send(
+				Embed(title="There was an error playing the song.")) if e else self.play_next(ctx)
+		)
 		self.bot.playing[ctx.guild.id][0].start = dt.datetime.utcnow()
 
 	async def play_music(self, ctx: Interaction):
@@ -160,20 +167,23 @@ class Play(commands.Cog):
 		self.bot.playing[ctx.guild.id] = self.bot.music_queue[ctx.guild.id][0]
 		self.bot.music_queue[ctx.guild.id].pop(0)
 
-		if self.bot.announce(ctx.guild.id):
+		if self.bot.settings[ctx.guild.id]["announce"]:
 			announce_song(self.bot, ctx)
 
-		vc.play(FFmpegPCMAudio(source=m_url, before_options=FFMPEG_OPTIONS), after=self.play_next(ctx))
+		vc.play(
+			FFmpegPCMAudio(
+				source=m_url,
+				before_options=FFMPEG_OPTIONS
+			),
+			after=lambda e: self.bot.logger.error(e) and ctx.followup.send(
+				Embed(title="There was an error playing the song.")) if e else self.play_next(ctx)
+		)
 		self.bot.playing[ctx.guild.id][0].start = dt.datetime.utcnow()
 
 	@slash_command(name="play", description="Play a song")
 	async def play(self, ctx: Interaction,
 				   query: str = SlashOption(name="music", description="the music to be played", required=True)):
 		await ctx.response.defer()
-
-		if not ctx.user.voice:
-			await ctx.followup.send(content="Connect to a voice channel!", ephemeral=True)
-			return
 
 		track = Track(query=query, user=ctx.user, spotify=True if "spotify" in query else False)
 
@@ -228,13 +238,9 @@ class Play(commands.Cog):
 		await ctx.followup.send(embed=embed)
 
 	@slash_command(name="playskip", description="Skip the current song and play the given one.")
-	async def playskip(self, ctx: Interaction, query: str = SlashOption(name="music",
-														   description="the music to be played",
-														   required=True)):
+	async def playskip(self, ctx: Interaction,
+					   query: str = SlashOption(name="music", description="the music to be played", required=True)):
 		await ctx.response.defer()
-		if not ctx.user.voice:
-			await ctx.followup.send(content="Connect to a voice channel!")
-			return
 
 		# embed = Embed(title="Playing " + f"from Spotify {bot.get_emoji(944554099175727124)}" if "spotify" in music else "",
 		# 			  color=bot.color)
@@ -267,86 +273,42 @@ class Play(commands.Cog):
 		else:
 			await ctx.followup.send(content="No song has been played yet!", ephemeral=True)
 
+	# still in beta and not working properly
+	# @slash_command(name="lyrics",
+	# 			   description="test",
+	# 			   guild_ids=[940575531567546369])
+	# async def lyrics(self, ctx):
+	# 	await ctx.response.defer()
+	# 	embed = Embed(title="Song Lyrics:", color=bot.color)
+	#
+	# 	try:
+	# 		song = GeniusApi().get_song(bot.playing[ctx.guild.id][0]['title'])
+	# 		lyrics = get_lyrics(song)
+	# 		ly = []
+	# 		for i in range(round(len(lyrics) / 1024) - 1):
+	# 			ly.append(lyrics[i:i + 1024])
+	# 		embed.add_field(name=song["title"], value=embeds.EmptyEmbed)
+	# 		embed.set_thumbnail(url=bot.playing[ctx.guild.id][0]['thumbnail'])
+	# 		print(ly)
+	# 		print(len(ly))
+	# 		embedl = [embed]
+	# 		for block in ly:
+	# 			nembed = Embed(title=embeds.EmptyEmbed, color=bot.color)
+	# 			nembed.add_field(name=embeds.EmptyEmbed, value=block)
+	# 			embedl.append(nembed)
+	# 		print(embedl)
+	# 		await ctx.followup.send(embeds=embedl[:10])
+	# 	except IndexError as ex:
+	# 		print(f"{type(ex).__name__} {ex}")
+	# 		await ctx.followup.send(content=f"Error: {ex}")
 
-# @slash_command(name="createpl",
-# 			   description="Create playlists",
-# 			   guild_ids=[940575531567546369])
-# async def createplaylist(self, ctx, name: str = SlashOption(name="name",
-# 															description="playlist name",
-# 															required=True)):
-# 	JSON_FORMAT['name'] = name
-# 	with open("./playlists/{}.json".format(name), "w") as f:
-# 		json.dump(JSON_FORMAT, f, indent=4)
-# 	f.close()
-# 	await ctx.response.send_message("Playlis {} was succefully created".format(name))
-#
-# @slash_command(name="addsong",
-# 			   description="Append a song to existing playlists",
-# 			   guild_ids=[940575531567546369])
-# async def addsong(self, ctx,
-# 				  playlist: str = SlashOption(name="playlist",
-# 											  description="the destination playlist",
-# 											  required=True),
-# 				  song: str = SlashOption(name="song",
-# 										  description="the song's URL",
-# 										  required=True)):
-# 	with open("./playlists/{}.json".format(playlist), "r") as a:
-# 		data = json.load(a)
-# 	data['songs'].append(song)
-# 	with open("./playlists/{}.json".format(playlist), "w") as f:
-# 		json.dump(data, f, indent=4)
-# 	await ctx.response.send_message("Song was successfully added!")
-#
-# @slash_command(name="playlist",
-# 			   description="Play songs from a playlist",
-# 			   guild_ids=[940575531567546369])
-# async def playlist(self, ctx, playlist_name: str = SlashOption(name="playlist_name",
-# 															   description="the name of the playlist",
-# 															   required=True)):
-# 	with open("./playlists/{}.json".format(playlist_name), "r") as f:
-# 		data = json.load(f)
-# 	for item in data['songs']:
-# 		vc = api.get(bot.voice_clients, guild=ctx.guild)
-# 		voice_channel = ctx.user.voice.channel
-# 		if voice_channel is None:
-# 			await ctx.response.send_message("Connect to a voice channel!")
-# 		else:
-# 			song = fast_link(item)
-# 			if song is False:
-# 				await ctx.response.send_message("Could not play the song from the playlist.")
-# 			else:
-# 				bot.music_queue.append([song, voice_channel])
-# 				await self.play_music(ctx)
-# 	await ctx.response.send_message("Playlist succefully loaded!")
 
-# still in beta and not working properly
-# @slash_command(name="lyrics",
-# 			   description="test",
-# 			   guild_ids=[940575531567546369])
-# async def lyrics(self, ctx):
-# 	await ctx.response.defer()
-# 	embed = Embed(title="Song Lyrics:", color=bot.color)
-# 	
-# 	try:
-# 		song = GeniusApi().get_song(bot.playing[ctx.guild.id][0]['title'])
-# 		lyrics = get_lyrics(song)
-# 		ly = []
-# 		for i in range(round(len(lyrics) / 1024) - 1):
-# 			ly.append(lyrics[i:i + 1024])
-# 		embed.add_field(name=song["title"], value=embeds.EmptyEmbed)
-# 		embed.set_thumbnail(url=bot.playing[ctx.guild.id][0]['thumbnail'])
-# 		print(ly)
-# 		print(len(ly))
-# 		embedl = [embed]
-# 		for block in ly:
-# 			nembed = Embed(title=embeds.EmptyEmbed, color=bot.color)
-# 			nembed.add_field(name=embeds.EmptyEmbed, value=block)
-# 			embedl.append(nembed)
-# 		print(embedl)
-# 		await ctx.followup.send(embeds=embedl[:10])
-# 	except IndexError as ex:
-# 		print(f"{type(ex).__name__} {ex}")
-# 		await ctx.followup.send(content=f"Error: {ex}")
+@Play.play.before_invoke
+@Play.playskip.before_invoke
+async def ensure_voice(ctx: Interaction):
+	if not ctx.user.voice:
+		await ctx.send(embed=Embed(title="Connect to a voice channel!"), ephemeral=True)
+		raise commands.CommandError(f"User {ctx.user.display_name} was not connected to voice channel")
 
 
 def setup(bot):

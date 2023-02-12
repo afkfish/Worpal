@@ -5,7 +5,6 @@ from urllib.parse import urlencode
 import requests
 from bs4 import BeautifulSoup
 
-
 token = os.getenv("GENIUS_TOKEN")
 headers = {
 	"Authorization": f"Bearer {token}"
