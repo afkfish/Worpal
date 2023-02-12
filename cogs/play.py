@@ -121,10 +121,10 @@ class Play(commands.Cog):
 		if vc.is_playing():
 			return
 
-		if self.bot.settings[ctx.guild.id]["loop"]:
+		if self.bot.settings[str(ctx.guild.id)]["loop"]:
 			m_url = self.bot.playing[ctx.guild.id][0].source
 
-		elif self.bot.settings[ctx.guild.id]["shuffle"]:
+		elif self.bot.settings[str(ctx.guild.id)]["shuffle"]:
 			entry = random.choice(self.bot.music_queue[ctx.guild.id])
 			m_url = entry[0].source
 			self.bot.playing[ctx.guild.id] = entry[0]
@@ -135,7 +135,7 @@ class Play(commands.Cog):
 			self.bot.playing[ctx.guild.id] = self.bot.music_queue[ctx.guild.id][0]
 			self.bot.music_queue[ctx.guild.id].pop(0)
 
-		if self.bot.settings[ctx.guild.id]["announce"]:
+		if self.bot.settings[str(ctx.guild.id)]["announce"]:
 			announce_song(self.bot, ctx)
 
 		vc.play(
@@ -167,7 +167,7 @@ class Play(commands.Cog):
 		self.bot.playing[ctx.guild.id] = self.bot.music_queue[ctx.guild.id][0]
 		self.bot.music_queue[ctx.guild.id].pop(0)
 
-		if self.bot.settings[ctx.guild.id]["announce"]:
+		if self.bot.settings[str(ctx.guild.id)]["announce"]:
 			announce_song(self.bot, ctx)
 
 		vc.play(
