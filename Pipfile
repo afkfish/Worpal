@@ -8,7 +8,8 @@ python_version = "3.11"
 
 [packages]
 beautifulsoup4 = "*"
-nextcord = { extras = ['voice', 'speed'], version = ">=2.3.2" } # nextcord[voice] is required for voice support
+discord.py = { extras = ['speed'], version = ">=2.1.1" }
+PyNaCl = "*"
 requests = "*"
 youtube_dl = ">=2021.12.17"
 google-api-python-client = "*"

@@ -5,7 +5,7 @@ import os
 from typing import List
 
 import discord
-from discord import Guild, VoiceClient, Member
+from discord import Guild, VoiceClient, Member, VoiceState
 from discord.ext import commands
 
 from structures.track import Track
@@ -70,14 +70,15 @@ class Worpal(commands.Bot):
         self.music_queue[guild.id] = []
         self.playing[guild.id] = ''
 
-    async def on_voice_state_update(self, member: Member, before: VoiceClient, after: VoiceClient):
-        voice: VoiceClient = before.guild.voice_client
-        if voice and before.channel and after.channel is None:
-            if before.channel.id == voice.channel.id:
-                if len(voice.channel.members) == 1:
-                    self.music_queue[member.guild.id] = []
-                    voice.stop()
-                    await voice.disconnect(force=True)
+    async def on_voice_state_update(self, member: Member, before: VoiceState, after: VoiceState):
+        if before.channel:
+            voice: VoiceClient = before.channel.guild.voice_client
+            if voice and not after.channel:
+                if before.channel.id == voice.channel.id:
+                    if len(voice.channel.members) == 1:
+                        self.music_queue[member.guild.id] = []
+                        voice.stop()
+                        await voice.disconnect(force=True)
 
     def shuffle(self, guildid) -> bool:
         return self.settings[str(guildid)]["shuffle"]
