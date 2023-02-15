@@ -1,6 +1,6 @@
 import dataclasses
 
-from nextcord import Embed
+from discord import Embed
 
 from structures.track import Track
 
@@ -21,7 +21,7 @@ class PlayList:
 
     def get_embed(self) -> Embed:
         embed = Embed(color=0x152875, title="Playlist added from spotify")
-        embed.set_thumbnail(self.image)
+        embed.set_thumbnail(url=self.image)
         embed.add_field(name=self.name, value=self.owner, inline=False)
 
         return embed
