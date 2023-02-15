@@ -1,105 +1,117 @@
+import asyncio
 import json
 import logging
 import os
+from typing import List
 
-from nextcord import utils, Activity, ActivityType, slash_command, VoiceClient
-from nextcord.ext import commands
+import discord
+from discord import Guild, VoiceClient, Member
+from discord.ext import commands
+
+from structures.track import Track
 
 
 class Worpal(commands.Bot):
-	def __init__(self) -> None:
-		super().__init__(activity=Activity(name="/play", type=ActivityType.listening))
-		self.remove_command('help')
-		self.logger = logger = logging.getLogger('Worpal')
-		logger.setLevel(logging.INFO)
-		self.music_queue = {}
-		self.query = {}
-		self.playing = {}
-		self.mc_uuids = {}
-		self.color = 0x0b9ebc
-		self.icon = "https://i.imgur.com/Rygy2KWs.jpg"
-		self.settings = {}
-		with open('./settings/settings.json', 'r') as f:
-			self.settings = json.load(f)
+    def __init__(self, initial_extensions: List[str], testing_guild_id) -> None:
+        intents = discord.Intents.default()
+        intents.message_content = True
+        super().__init__(intents=intents, command_prefix="§")
+        self.initial_extensions = initial_extensions
+        self.testing_guild_id = testing_guild_id
+        self.remove_command('help')
+        self.logger = logging.getLogger('Worpal')
+        self.logger.setLevel(logging.INFO)
+        self.music_queue: {int: [Track]} = {}
+        self.playing: {int: Track} = {}
+        self.mc_uuids = {}
+        self.color = 0x0b9ebc
+        self.icon = "https://i.imgur.com/Rygy2KWs.jpg"
+        self.settings = {}
+        with open('./settings/settings.json', 'r', encoding='UTF-8') as file:
+            self.settings = json.load(file)
 
-	async def on_ready(self):
-		self.logger.info(f"Logged in as {self.user}!")
+    async def setup_hook(self) -> None:
 
-		modules = [
-			'play',
-			'navigation',
-			'seek',
-			'settings',
-			'help',
-			# 'search', TODO: fix search with api
-			'wynncraft'
-		]
+        # here, we are loading extensions prior to sync to ensure we are syncing interactions defined in those
+        # extensions.
 
-		for cog in modules:
-			try:
-				self.load_extension(f"cogs.{cog}")
-			except Exception as e:
-				self.logger.error(f"Failed to load cog {cog}: {type(e).__name__}, {e}")
+        for extension in self.initial_extensions:
+            await self.load_extension(f"cogs.{extension}")
 
-		for guild in self.guilds:
-			if str(guild.id) not in self.settings:
-				self.settings.update({str(guild.id): {'announce': False, 'shuffle': False, 'loop': False}})
-			self.music_queue[guild.id] = []
-			self.query[guild.id] = []
-			self.playing[guild.id] = ''
+        # In overriding setup hook,
+        # we can do things that require a bot prior to starting to process events from the websocket.
+        # In this case, we are using this to ensure that once we are connected, we sync for the testing guild.
+        # You should not do this for every guild or for global sync, those should only be synced when changes happen.
+        if self.testing_guild_id:
+            guild = discord.Object(self.testing_guild_id)
+            # We'll copy in the global commands to test with:
+            self.tree.copy_global_to(guild=guild)
+            # followed by syncing to the testing guild.
+            await self.tree.sync(guild=guild)
 
-	async def on_guid_join(self, guild):
-		self.settings.update({str(guild.id): {'announce': False, 'shuffle': False, 'loop': False}})
-		self.music_queue[guild.id] = []
-		self.query[guild.id] = []
-		self.playing[guild.id] = ''
+    async def on_ready(self):
+        self.logger.info("Logged in as %s!", self.user)
+        await self.tree.sync()
 
-	async def on_voice_state_update(self, member, before, after):
-		voice: VoiceClient = utils.get(self.voice_clients, guild=member.guild)
-		if voice is not None and before.channel is not None:
-			if before.channel.id == voice.channel.id:
-				if len(voice.channel.members) == 1:
-					self.music_queue[member.guild.id] = []
-					voice.stop()
-					await voice.disconnect(force=True)
+        for guild in self.guilds:
+            if str(guild.id) not in self.settings:
+                self.settings.update({
+                    str(guild.id): {
+                        'announce': False,
+                        'shuffle': False,
+                        'loop': False
+                    }
+                })
+            self.music_queue[guild.id] = []
+            self.playing[guild.id] = ''
 
-	@staticmethod
-	def shuffle(guildid):
-		with open('./settings/settings.json', 'r') as f:
-			data = json.load(f)
-		return bool(data[str(guildid)]['shuffle'])
+    async def on_guid_join(self, guild: Guild):
+        self.settings.update({str(guild.id): {'announce': False, 'shuffle': False, 'loop': False}})
+        self.music_queue[guild.id] = []
+        self.playing[guild.id] = ''
 
-	@staticmethod
-	def announce(guildid):
-		with open('./settings/settings.json', 'r') as f:
-			data = json.load(f)
-		return bool(data[str(guildid)]['announce'])
+    async def on_voice_state_update(self, member: Member, before: VoiceClient, after: VoiceClient):
+        voice: VoiceClient = before.guild.voice_client
+        if voice and before.channel and after.channel is None:
+            if before.channel.id == voice.channel.id:
+                if len(voice.channel.members) == 1:
+                    self.music_queue[member.guild.id] = []
+                    voice.stop()
+                    await voice.disconnect(force=True)
 
-	@staticmethod
-	def looping(guildid):
-		with open('./settings/settings.json', 'r') as f:
-			data = json.load(f)
-		return bool(data[str(guildid)]['loop'])
+    def shuffle(self, guildid) -> bool:
+        return self.settings[str(guildid)]["shuffle"]
 
-	@slash_command(description="Latency test", guild_ids=[940575531567546369])
-	async def ping(self, ctx):
-		await ctx.followup.send(f"Pong! {round(self.latency * 1000)}ms")
+    def announce(self, guildid) -> bool:
+        return self.settings[str(guildid)]['announce']
 
-	def __del__(self):
-		self.logger.info("Writing settings to file...")
-		with open('./settings/settings.json', 'w') as f:
-			json.dump(self.settings, f, indent=4)
+    def looping(self, guildid) -> bool:
+        return self.settings[str(guildid)]['loop']
+
+    def __del__(self):
+        self.logger.info("Writing settings to file...")
+        with open('./settings/settings.json', 'w', encoding="UTF-8") as file:
+            json.dump(self.settings, file, indent=4)
 
 
-def main() -> None:
-	logging.basicConfig(
-		level=logging.INFO,
-		format='[%(asctime)s] [%(levelname)s] %(name)s: %(message)s',
-		datefmt='%Y-%m-%d %H:%M:%S'
-	)
-	worpal = Worpal()
-	worpal.run(os.getenv('BOT_TOKEN'))
+async def main() -> None:
+    logging.basicConfig(
+        level=logging.INFO,
+        format='[%(asctime)s] [%(levelname)s] %(name)s: %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+    exts = [
+        'play',
+        'navigation',
+        'settings',
+        'help',
+        # 'search', TODO: fix search with api
+        'wynncraft',
+        'utils'
+    ]
+
+    await Worpal(exts, 940575531567546369).start(os.getenv('BOT_TOKEN'))
 
 
 if __name__ == '__main__':
-	main()
+    asyncio.run(main())
