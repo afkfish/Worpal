@@ -31,9 +31,7 @@ class Track:
         self.channel: VoiceChannel
 
     def get_embed(self) -> Embed:
-        desc = f"{self.progress_bar()} `[{self.format_time()}/{self.format_time()}]`"
-
-        embed = Embed(color=0x152875, title=self.title, description=desc)
+        embed = Embed(color=0x152875, title=self.title)
         embed.set_thumbnail(url=self.thumbnail)
         if len(self.artists) > 0:
             embed.add_field(name="Artists", value=", ".join(self.artists))
