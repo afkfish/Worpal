@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "2da75c8a1d20473d1e1d4bda72bca0bf271272b2367c559afab681794953d586"
+            "sha256": "42e77a43414ff6bdd22de8b30395e21865fc80cff5e57b77a58dda7c94e81b6d"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -764,6 +764,11 @@
             ],
             "markers": "python_version >= '3.7'",
             "version": "==1.8.2"
+        },
+        "youtube-dl": {
+            "editable": true,
+            "git": "https://github.com/ytdl-org/youtube-dl.git",
+            "ref": "57802e632f5a741df6fd9b30a455c32632944489"
         }
     },
     "develop": {}

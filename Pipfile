@@ -8,7 +8,8 @@ python_version = "3.11"
 
 [packages]
 beautifulsoup4 = "*"
-discord.py = { extras = ['speed'], version = ">=2.1.1" }
 PyNaCl = "*"
 requests = "*"
 google-api-python-client = "*"
+discord = {py = { extras = ['speed'], version = ">=2.1.1" }}
+youtube-dl = {editable = true, ref = "master", git = "https://github.com/ytdl-org/youtube-dl.git"}
