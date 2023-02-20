@@ -35,13 +35,11 @@ def announce_song(bot: Worpal, interaction: Interaction, view=None) -> None:
     track = bot.playing[interaction.guild.id]
     embed = Embed(title="Currently playing:", color=bot.color)
     embed.set_thumbnail(url=track.thumbnail)
-    playtime = dt.timedelta(seconds=(dt.datetime.utcnow() - bot.playing[interaction.guild.id].start).seconds)
-    embed.add_field(name=track.title, value=f"Currently at:\n{playtime}", inline=True)
     embed.set_footer(text=str(dt.timedelta(seconds=int(track.duration))))
-    # track = self.bot.playing[interaction.guild.id]
-    # desc = f"{self.progress_bar()} `[{self.format_time()}/{self.format_time()}]`"
 
-    if view is not None:
+    if view:
+        desc = f"{track.progress_bar()} `[{track.format_time()}/{track.format_time()}]`"
+        embed.add_field(name=track.title, value=desc, inline=False)
         bot.loop.create_task(interaction.followup.send(embed=embed, view=view))
     else:
         bot.loop.create_task(interaction.followup.send(embed=embed))

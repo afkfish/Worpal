@@ -1,6 +1,7 @@
 import dataclasses
 import datetime as dt
 import math
+from datetime import timedelta
 
 import discord
 from discord import VoiceChannel, Embed
@@ -27,7 +28,7 @@ class Track:
         self.user = user
         self.spotify = spotify
         self.artists = []
-        self.start = None
+        self.start: dt.datetime = dt.datetime.utcnow()
         self.channel: VoiceChannel
 
     def get_embed(self) -> Embed:
@@ -42,13 +43,13 @@ class Track:
     def is_valid(self) -> bool:
         return bool(self.title and self.source)
 
-    def get_position(self) -> dt.datetime:
+    def get_position(self) -> timedelta:
         return dt.datetime.utcnow() - self.start
 
     def get_progress(self) -> float:
-        return self.get_position().second/self.get_duration().seconds
+        return self.get_position().seconds/self.get_duration().seconds
 
-    def get_duration(self) -> dt.timedelta:
+    def get_duration(self) -> timedelta:
         return dt.timedelta(seconds=self.duration)
 
     def progress_bar(self) -> str:
@@ -63,8 +64,8 @@ class Track:
 
     def format_time(self) -> str:
         seconds = math.floor(self.get_duration().seconds/1000.0)
-        hours = seconds/(60*60)
+        hours = (str(seconds/(60*60)) + ":" if seconds/(60*60) > 0 else "")
         seconds %= 60*60
-        minutes = seconds/60
+        minutes = ("0" + str(seconds/60) if seconds/60 < 10 else seconds/60)
         seconds %= 60
-        return str((str(hours) + ":" if hours > 0 else "") + ("0" + str(minutes) if minutes < 10 else minutes) + ":" + ("0"+ str(seconds) if seconds < 10 else seconds))
+        return hours + minutes + ":" + ("0" + str(seconds) if seconds < 10 else seconds)
