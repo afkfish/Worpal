@@ -4,6 +4,7 @@ from discord.ext import commands
 from main import Worpal
 
 
+# TODO: make an embed controlled by a view out of this
 class Help(commands.GroupCog, name="help"):
 
     def __init__(self, bot: Worpal):
@@ -115,6 +116,7 @@ class Help(commands.GroupCog, name="help"):
     @app_commands.command(name="np", description="np command")
     async def help_np(self, interaction: Interaction):
         await self.help_embed(interaction, "np")
+
 
 # @app_commands.command(name="lyrics", description="lyrics command")
 # async def help_lyrics(self, interaction: Interaction):

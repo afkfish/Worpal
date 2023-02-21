@@ -14,6 +14,9 @@ from structures.track import Track
 JSON_FORMAT = {'name': '', 'songs': []}
 FFMPEG_OPTIONS = "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
 
+track_pattern = re.compile(r"https://open\.spotify\.com/track/[A-Za-z0-9]+\?si=[A-Za-z0-9]+", re.IGNORECASE)
+playlist_pattern = re.compile(r"https://open\.spotify\.com/playlist/[A-Za-z0-9]+\?si=[A-Za-z0-9]+", re.IGNORECASE)
+
 
 async def process_query(bot: Worpal, interaction: Interaction, user_vc, playlist: PlayList):
     for track in playlist.tracks:
@@ -111,6 +114,13 @@ class Play(commands.Cog):
     def __init__(self, bot: Worpal):
         self.bot = bot
 
+    def play_interrupt_handler(self, interaction: Interaction, error):
+        if error:
+            self.bot.logger.error(error)
+            interaction.channel.send(Embed(title="There was an error while trying to play the song."))
+
+        self.play_next(interaction)
+
     def play_next(self, interaction: Interaction):
         if len(self.bot.music_queue[interaction.guild.id]) == 0:
             return
@@ -144,8 +154,7 @@ class Play(commands.Cog):
                 source=m_url,
                 before_options=FFMPEG_OPTIONS
             ),
-            after=lambda e: self.bot.logger.error(e) and interaction.channel.send(
-                Embed(title="There was an error playing the song.")) if e else self.play_next(interaction)
+            after=lambda e: self.play_interrupt_handler(interaction, e)
         )
         self.bot.playing[interaction.guild.id].start = dt.datetime.utcnow()
 
@@ -176,8 +185,7 @@ class Play(commands.Cog):
                 source=m_url,
                 before_options=FFMPEG_OPTIONS
             ),
-            after=lambda e: self.bot.logger.error(e) and interaction.channel.send(
-                Embed(title="There was an error playing the song.")) if e else self.play_next(interaction)
+            after=lambda e: self.play_interrupt_handler(interaction, e)
         )
         self.bot.playing[interaction.guild.id].start = dt.datetime.utcnow()
 
@@ -193,9 +201,10 @@ class Play(commands.Cog):
     async def play(self, interaction: Interaction, query: str):
         await interaction.response.defer()
 
-        track = Track(query=query, user=interaction.user, spotify=True if "spotify" in query else False)
+        track = Track(query=query, user=interaction.user, spotify=bool("spotify" in query))
 
         user_vc = interaction.user.voice.channel
+        playlist = None
         if "open.spotify.com" not in query:
             track = get_link(track)
             if not track.is_valid():
@@ -208,17 +217,24 @@ class Play(commands.Cog):
             await self.play_music(interaction)
             return
 
-        playlist = None
-        if "/track" in query:
+        elif track_pattern.match(query):
             # https://open.spotify.com/track/5oKRyAx215xIycigG6NNwt?si=834b843759b84497
             # https://open.spotify.com/track/2Oz3Tj8RbLBZFW5Adsyzyj?si=ae09611876c44d65
-            track_id = re.search(r"track/(.+?)\?si", query).group(1)
-            track.id = track_id
-            track = SpotifyApi().get_by_id(track=track)
+            try:
+                track_id = re.search(r"track/(.+?)\?si", query).group(1)
+                track.id = track_id
+                track = SpotifyApi().get_by_id(track=track)
+            except AttributeError:
+                interaction.followup.send(embed=Embed(title="Error in getting song from spotify!"))
+                return
 
-        elif "/playlist" in query:
-            playlist_id = re.search(r"playlist/(.+?)\?si", query).group(1)
-            playlist = SpotifyApi().get_playlist(playlist_id=playlist_id)
+        elif playlist_pattern.match(query):
+            try:
+                playlist_id = re.search(r"playlist/(.+?)\?si", query).group(1)
+                playlist = SpotifyApi().get_playlist(playlist_id=playlist_id)
+            except AttributeError:
+                interaction.followup.send(embed=Embed(title="Error in getting playlist from spotify!"))
+                return
 
             interaction.followup.send(embed=playlist.get_embed())
             track = playlist.tracks[0]
@@ -230,7 +246,7 @@ class Play(commands.Cog):
 
         track.channel = user_vc
         self.bot.music_queue[interaction.guild.id].append(track)
-        await interaction.followup.send(embed=track.get_embed() if playlist is None else playlist.get_embed())
+        await interaction.followup.send(embed=playlist.get_embed() if playlist else track.get_embed())
         await self.play_music(interaction)
 
         if playlist is not None:
@@ -241,13 +257,8 @@ class Play(commands.Cog):
     async def playskip(self, interaction: Interaction, query: str):
         await interaction.response.defer()
 
-        voice: VoiceClient = interaction.guild.voice_client
-        voice_channel = interaction.user.voice.channel
-        if voice is None and not isinstance(voice, VoiceClient):
-            await interaction.followup.send(content="Bot is not connected! Try playing a song first.", ephemeral=True)
-            return
-
-        voice.stop()
+        # first we check if the song can be played, so we are not interrupting
+        # if something is already playing
         track = Track(query=query, user=interaction.user)
         track = get_link(track)
 
@@ -255,7 +266,16 @@ class Play(commands.Cog):
             await interaction.followup.send(content="Couldn't play the song.", ephemeral=True)
             return
 
-        self.bot.music_queue[interaction.guild.id].insert(0, [track, voice_channel])
+        # we check wether the bot is connected and stop playing,
+        # if not, connect to user
+        voice: VoiceClient = interaction.guild.voice_client
+        user_vc = interaction.user.voice.channel
+        if not voice:
+            await user_vc.connect()
+        else:
+            voice.stop()
+
+        self.bot.music_queue[interaction.guild.id].insert(0, track)
         await interaction.followup.send(embed=track.get_embed())
         await self.play_music(interaction)
 
@@ -273,7 +293,7 @@ class Play(commands.Cog):
 
         m_url = self.bot.playing[interaction.guild.id].source
 
-        if voice is None:
+        if not voice:
             voice = await user_vc.connect()
 
         elif voice.channel != user_vc:
@@ -287,12 +307,15 @@ class Play(commands.Cog):
                 before_options=f'-ss {time} -reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
                 source=m_url
             ),
-            after=lambda e: self.bot.logger.error(e) if e else Play(self.bot).play_next(interaction)
+            after=lambda e: self.play_interrupt_handler(interaction, e)
         )
-        self.bot.playing[interaction.guild.id][0].start = dt.datetime.utcnow() - dt.timedelta(seconds=int(time))
+        self.bot.playing[interaction.guild.id].start = dt.datetime.utcnow() - dt.timedelta(seconds=int(time))
         # send a message saying the bot is now playing the song
         await interaction.followup.send(
-            content=f'Now playing {self.bot.playing[interaction.guild.id].title} from {formatted_time} seconds.')
+            embed=Embed(
+                title=f'Now playing {self.bot.playing[interaction.guild.id].title} from {formatted_time} seconds.'
+            )
+        )
 
     @app_commands.command(name="queue", description="Displays the songs in the queue")
     async def queue(self, interaction: Interaction):
@@ -300,9 +323,9 @@ class Play(commands.Cog):
         embed = Embed(title="Queue", color=self.bot.color)
         songs = slist(self.bot, interaction)
         if songs:
-            embed.add_field(name="Songs: ", value=songs, inline=True)
+            embed.add_field(name="Songs: ", value=songs)
         else:
-            embed.add_field(name="Songs: ", value="No music in queue", inline=True)
+            embed.add_field(name="Songs: ", value="No music in queue")
         await interaction.followup.send(embed=embed)
 
     @app_commands.command(name="np", description="The song that is currently being played")
@@ -315,6 +338,7 @@ class Play(commands.Cog):
 
         else:
             await interaction.followup.send(content="No song has been played yet!", ephemeral=True)
+
 
 # still in beta and not working properly
 # @app_commands.command(name="lyrics",

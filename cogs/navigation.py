@@ -15,7 +15,7 @@ class Navigation(commands.Cog):
     async def skip(self, interaction: Interaction):
         await interaction.response.defer()
         voice: VoiceClient = interaction.guild.voice_client
-        if voice is not None and isinstance(voice, VoiceClient):
+        if voice:
             voice.stop()
             await Play(self.bot).play_music(interaction)
             await interaction.followup.send(embed=Embed(title="Skipped :next_track:", color=self.bot.color))
@@ -32,7 +32,7 @@ class Navigation(commands.Cog):
     async def pause(self, interaction: Interaction):
         await interaction.response.defer()
         voice: VoiceClient = interaction.guild.voice_client
-        if isinstance(voice, VoiceClient) and voice.is_playing():
+        if voice and voice.is_playing():
             voice.pause()
             await interaction.followup.send(embed=Embed(title="Paused :pause_button:", color=self.bot.color))
             return
@@ -48,7 +48,7 @@ class Navigation(commands.Cog):
     async def resume(self, interaction: Interaction):
         await interaction.response.defer()
         voice: VoiceClient = interaction.guild.voice_client
-        if isinstance(voice, VoiceClient) and voice.is_paused():
+        if voice and voice.is_paused():
             voice.resume()
             await interaction.followup.send(embed=Embed(title="Resumed :arrow_forward:", color=self.bot.color))
             return
@@ -64,11 +64,12 @@ class Navigation(commands.Cog):
     async def stop(self, interaction: Interaction):
         await interaction.response.defer()
         voice: VoiceClient = interaction.guild.voice_client
-        if isinstance(voice, VoiceClient) and voice is not None:
+        if voice:
             voice.stop()
             self.bot.music_queue[interaction.guild.id] = []
             await interaction.followup.send(embed=Embed(title="Stopped :stop_button:", color=self.bot.color))
             return
+
         await interaction.followup.send(embed=Embed(title="Error!", color=self.bot.color))
 
     # @user_command(name="Stop")
@@ -80,7 +81,7 @@ class Navigation(commands.Cog):
     async def leave(self, interaction: Interaction):
         await interaction.response.defer(ephemeral=True)
         voice: VoiceClient = interaction.guild.voice_client
-        if voice is not None and isinstance(voice, VoiceClient):
+        if voice:
             await voice.disconnect()
             await interaction.followup.send(embed=Embed(title="Disconnected!", color=self.bot.color), ephemeral=True)
             return
@@ -96,12 +97,13 @@ class Navigation(commands.Cog):
     async def clear_dup(self, interaction: Interaction):
         await interaction.response.defer()
         if self.bot.music_queue[interaction.guild.id]:
-            res = []
-            [res.append(x) for x in self.bot.music_queue[interaction.guild.id] if x not in res]
+            res = list(dict.fromkeys(self.bot.music_queue[interaction.guild.id]))
             self.bot.music_queue[interaction.guild.id] = res
+
         embed = Embed(title="Duplicated songs cleared! :broom:", color=self.bot.color)
         songs = slist(self.bot, interaction)
-        if songs != "":
+
+        if songs:
             embed.add_field(name="Songs: ", value=songs, inline=True)
         else:
             embed.add_field(name="Songs: ", value="No music in queue", inline=True)
@@ -112,6 +114,7 @@ class Navigation(commands.Cog):
         await interaction.response.defer()
         if self.bot.music_queue[interaction.guild.id]:
             self.bot.music_queue[interaction.guild.id] = []
+
         await interaction.followup.send(embed=Embed(title="Queue cleared! :broom:", color=self.bot.color))
 
 

@@ -2,7 +2,6 @@ import asyncio
 import json
 import logging
 import os
-from typing import List
 
 import discord
 from discord import Guild, VoiceClient, Member, VoiceState
@@ -12,7 +11,7 @@ from structures.track import Track
 
 
 class Worpal(commands.Bot):
-    def __init__(self, initial_extensions: List[str], testing_guild_id) -> None:
+    def __init__(self, initial_extensions: [str], testing_guild_id) -> None:
         intents = discord.Intents.default()
         intents.message_content = True
         super().__init__(intents=intents, command_prefix="§")
@@ -105,7 +104,7 @@ async def main() -> None:
         'play',
         'navigation',
         'settings',
-        'help',
+        # 'help', too many redundant commands
         # 'search', TODO: fix search with api
         'wynncraft',
         'utils'
