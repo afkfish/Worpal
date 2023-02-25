@@ -54,59 +54,68 @@ class Navigation(ui.View):
         self.bot = bot
 
     @ui.button(emoji="🔄", style=ButtonStyle.red, disabled=True)
-    async def replay(self, button: ui.Button, interaction: Interaction):
+    async def replay(self, interaction: Interaction, button: ui.Button):
         self.stop()
         for child in self.children:
             child.disabled = True
         button.style = ButtonStyle.green
-        await interaction.followup.send(view=self)
         voice: VoiceClient = interaction.guild.voice_client
-        if voice is not None and isinstance(voice, VoiceClient):
+        if voice:
             self.bot.music_queue[interaction.guild.id].insert(0, self.bot.playing[interaction.guild.id])
             voice.stop()
             await Play(self.bot).play_music(interaction)
             embed = Embed(title="Replaying 🔄")
-            await interaction.followup.send(embed=embed)
+            await interaction.response.edit_message(embed=embed, view=self)
+            return
+
+        await interaction.response.edit_message(view=self)
 
     @ui.button(emoji="▶️", style=ButtonStyle.grey)
-    async def resume(self, button: ui.Button, interaction: Interaction):
+    async def resume(self, interaction: Interaction, button: ui.Button):
         self.stop()
         for child in self.children:
             child.disabled = True
         button.style = ButtonStyle.green
-        await interaction.followup.send(view=self)
+        await interaction.response.edit_message(view=self)
         voice: VoiceClient = interaction.guild.voice_client
-        if isinstance(voice, VoiceClient) and voice.is_paused():
+        if voice and voice.is_paused():
             voice.resume()
             embed = Embed(title="Resumed ▶️")
-            await interaction.followup.send(embed=embed)
+            await interaction.response.edit_message(embed=embed, view=self)
+            return
+
+        await interaction.response.edit_message(view=self)
 
     @ui.button(emoji="⏸️", style=ButtonStyle.grey)
-    async def pause(self, button: ui.Button, interaction: Interaction):
+    async def pause(self, interaction: Interaction, button: ui.Button):
         self.stop()
         for child in self.children:
             child.disabled = True
         button.style = ButtonStyle.green
-        await interaction.followup.send(view=self)
         voice: VoiceClient = interaction.guild.voice_client
-        if isinstance(voice, VoiceClient) and voice.is_playing():
+        if voice and voice.is_playing():
             voice.pause()
             embed = Embed(title="Paused ⏸️")
-            await interaction.followup.send(embed=embed)
+            await interaction.response.edit_message(embed=embed, view=self)
+            return
+
+        await interaction.response.edit_message(view=self)
 
     @ui.button(emoji="⏭️", style=ButtonStyle.grey)
-    async def skip(self, button: ui.Button, interaction: Interaction):
+    async def skip(self, interaction: Interaction, button: ui.Button):
         self.stop()
         for child in self.children:
             child.disabled = True
         button.style = ButtonStyle.green
-        await interaction.followup.send(view=self)
         voice: VoiceClient = interaction.guild.voice_client
-        if voice is not None and isinstance(voice, VoiceClient):
+        if voice:
             voice.stop()
             await Play(self.bot).play_music(interaction)
             embed = Embed(title="Skipped ⏭️")
-            await interaction.followup.send(embed=embed)
+            await interaction.response.edit_message(embed=embed, view=self)
+            return
+
+        await interaction.response.edit_message(view=self)
 
 
 class Play(commands.Cog):
@@ -320,7 +329,7 @@ class Play(commands.Cog):
     @app_commands.command(name="queue", description="Displays the songs in the queue")
     async def queue(self, interaction: Interaction):
         await interaction.response.defer()
-        embed = Embed(title="Queue", color=self.bot.color)
+        embed = Embed(title="Queue", color=Worpal.color)
         songs = slist(self.bot, interaction)
         if songs:
             embed.add_field(name="Songs: ", value=songs)
@@ -331,7 +340,7 @@ class Play(commands.Cog):
     @app_commands.command(name="np", description="The song that is currently being played")
     async def np(self, interaction: Interaction):
         await interaction.response.defer()
-        if len(self.bot.playing[interaction.guild.id]) > 0:
+        if self.bot.playing[interaction.guild.id]:
             view = Navigation(self.bot)
             announce_song(self.bot, interaction, view)
             await view.wait()

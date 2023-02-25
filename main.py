@@ -11,6 +11,9 @@ from structures.track import Track
 
 
 class Worpal(commands.Bot):
+    color = 0x0b9ebc
+    icon = "https://i.imgur.com/Rygy2KWs.jpg"
+
     def __init__(self, initial_extensions: [str], testing_guild_id) -> None:
         intents = discord.Intents.default()
         intents.message_content = True
@@ -23,8 +26,6 @@ class Worpal(commands.Bot):
         self.music_queue: {int: [Track]} = {}
         self.playing: {int: Track} = {}
         self.mc_uuids = {}
-        self.color = 0x0b9ebc
-        self.icon = "https://i.imgur.com/Rygy2KWs.jpg"
         self.settings = {}
         with open('./settings/settings.json', 'r', encoding='UTF-8') as file:
             self.settings = json.load(file)
@@ -94,17 +95,45 @@ class Worpal(commands.Bot):
             json.dump(self.settings, file, indent=4)
 
 
+class CustomFormatter(logging.Formatter):
+
+    grey = "\x1b[38;20m"
+    yellow = "\x1b[33;20m"
+    red = "\x1b[31;20m"
+    bold_red = "\x1b[31;1m"
+    reset = "\x1b[0m"
+    format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d)"
+
+    FORMATS = {
+        logging.DEBUG: grey + format + reset,
+        logging.INFO: grey + format + reset,
+        logging.WARNING: yellow + format + reset,
+        logging.ERROR: red + format + reset,
+        logging.CRITICAL: bold_red + format + reset
+    }
+
+    def format(self, record):
+        log_fmt = self.FORMATS.get(record.levelno)
+        formatter = logging.Formatter(log_fmt)
+        return formatter.format(record)
+
+
 async def main() -> None:
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.INFO)
+    ch.setFormatter(CustomFormatter())
     logging.basicConfig(
-        level=logging.INFO,
         format='[%(asctime)s] [%(levelname)s] %(name)s: %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
+        datefmt='%Y-%m-%d %H:%M:%S',
+        level=logging.INFO,
+        handlers=[ch]
     )
+
     exts = [
         'play',
         'navigation',
         'settings',
-        # 'help', too many redundant commands
+        'help',
         # 'search', TODO: fix search with api
         'wynncraft',
         'utils'
