@@ -50,14 +50,15 @@ def announce_song(bot: Worpal, interaction: Interaction, view=None) -> None:
 
 class Navigation(ui.View):
     def __init__(self, bot: Worpal):
-        super().__init__(timeout=50)
+        super().__init__(timeout=100)
         self.bot = bot
 
     @ui.button(emoji="🔄", style=ButtonStyle.red, disabled=True)
     async def replay(self, interaction: Interaction, button: ui.Button):
         self.stop()
         for child in self.children:
-            child.disabled = True
+            child.disabled = False
+        button.disabled = True
         button.style = ButtonStyle.green
         voice: VoiceClient = interaction.guild.voice_client
         if voice:
@@ -72,9 +73,9 @@ class Navigation(ui.View):
 
     @ui.button(emoji="▶️", style=ButtonStyle.grey)
     async def resume(self, interaction: Interaction, button: ui.Button):
-        self.stop()
         for child in self.children:
-            child.disabled = True
+            child.disabled = False
+        button.disabled = True
         button.style = ButtonStyle.green
         await interaction.response.edit_message(view=self)
         voice: VoiceClient = interaction.guild.voice_client
@@ -88,9 +89,9 @@ class Navigation(ui.View):
 
     @ui.button(emoji="⏸️", style=ButtonStyle.grey)
     async def pause(self, interaction: Interaction, button: ui.Button):
-        self.stop()
         for child in self.children:
-            child.disabled = True
+            child.disabled = False
+        button.disabled = True
         button.style = ButtonStyle.green
         voice: VoiceClient = interaction.guild.voice_client
         if voice and voice.is_playing():
