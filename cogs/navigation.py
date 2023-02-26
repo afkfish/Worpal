@@ -9,39 +9,34 @@ class Navigation(commands.Cog):
 
     def __init__(self, bot: Worpal):
         self.bot = bot
-        self.ctx_skip = app_commands.ContextMenu(
-            name="Skip",
-            callback=self.skip
-        )
-        self.bot.tree.add_command(self.ctx_skip)
-        # TODO: fix this bugged thing
-        # self.ctx_pause = app_commands.ContextMenu(
-        #     name="Pause",
-        #     callback=self.pause
-        # )
-        # self.bot.tree.add_command(self.ctx_pause)
-        # self.ctx_resume = app_commands.ContextMenu(
-        #     name="Resume",
-        #     callback=self.resume
-        # )
-        # self.bot.tree.add_command(self.ctx_resume)
-        # self.ctx_stop = app_commands.ContextMenu(
-        #     name="Stop",
-        #     callback=self.stop
-        # )
-        # self.bot.tree.add_command(self.ctx_stop)
-        # self.ctx_leave = app_commands.ContextMenu(
-        #     name="Leave",
-        #     callback=self.leave
-        # )
-        # self.bot.tree.add_command(self.ctx_leave)
+        self.ctx_menus = [
+            app_commands.ContextMenu(
+                name="Skip",
+                callback=self.skip
+            ),
+            app_commands.ContextMenu(
+                name="Pause",
+                callback=self.pause
+            ),
+            app_commands.ContextMenu(
+                name="Resume",
+                callback=self.resume
+            ),
+            app_commands.ContextMenu(
+                name="Stop",
+                callback=self.stop
+            ),
+            app_commands.ContextMenu(
+                name="Leave",
+                callback=self.leave
+            )
+        ]
+        for ctx_menu in self.ctx_menus:
+            self.bot.tree.add_command(ctx_menu)
 
     async def cog_unload(self) -> None:
-        self.bot.tree.remove_command(self.ctx_skip.name, type=self.ctx_skip.type)
-        # self.bot.tree.remove_command(self.ctx_pause.name, type=self.ctx_pause.type)
-        # self.bot.tree.remove_command(self.ctx_resume.name, type=self.ctx_resume.type)
-        # self.bot.tree.remove_command(self.ctx_stop.name, type=self.ctx_stop.type)
-        # self.bot.tree.remove_command(self.ctx_leave.name, type=self.ctx_leave.type)
+        for ctx_menu in self.ctx_menus:
+            self.bot.tree.remove_command(ctx_menu.name, type=ctx_menu.type)
 
     @app_commands.command(name="skip", description="Skip the current song")
     async def skip_command(self, interaction: Interaction) -> None:
@@ -62,8 +57,7 @@ class Navigation(commands.Cog):
     async def pause_command(self, interaction: Interaction) -> None:
         await self.pause(interaction)
 
-    @staticmethod
-    async def pause(interaction: Interaction, user: User = None) -> None:
+    async def pause(self, interaction: Interaction, user: User = None) -> None:
         await interaction.response.defer()
         voice: VoiceClient = interaction.guild.voice_client
         if voice and voice.is_playing():
@@ -77,8 +71,7 @@ class Navigation(commands.Cog):
     async def resume_command(self, interaction: Interaction) -> None:
         await self.resume(interaction)
 
-    @staticmethod
-    async def resume(interaction: Interaction, user: User = None) -> None:
+    async def resume(self, interaction: Interaction, user: User = None) -> None:
         await interaction.response.defer()
         voice: VoiceClient = interaction.guild.voice_client
         if voice and voice.is_paused():
@@ -101,7 +94,7 @@ class Navigation(commands.Cog):
             await interaction.followup.send(embed=Embed(title="Stopped :stop_button:", color=Worpal.color))
             return
 
-        await interaction.followup.send(embed=Embed(title="Error!", color=Worpal.color))
+        await interaction.followup.send(embed=Embed(title="I'm not playing anything", color=Worpal.color))
 
     @app_commands.command(name="leave", description="Leave voice chat")
     async def leave_command(self, interaction: Interaction) -> None:
