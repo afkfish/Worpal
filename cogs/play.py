@@ -169,7 +169,7 @@ class Play(commands.Cog):
         self.bot.playing[interaction.guild.id].start = dt.datetime.utcnow()
 
     async def play_music(self, interaction: Interaction):
-        if self.bot.music_queue[interaction.guild.id]:
+        if not self.bot.music_queue[interaction.guild.id]:
             return
 
         m_url = self.bot.music_queue[interaction.guild.id][0].source
@@ -255,7 +255,7 @@ class Play(commands.Cog):
             return
 
         if track.spotify:
-            track.title += self.bot.get_emoji(944554099175727124)
+            track.title += str(self.bot.get_emoji(944554099175727124))
         track.channel = user_vc
         self.bot.music_queue[interaction.guild.id].append(track)
         await interaction.followup.send(embed=playlist.get_embed() if playlist else track.get_embed())
