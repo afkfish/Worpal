@@ -96,22 +96,21 @@ class Navigation(commands.Cog):
 
         await interaction.followup.send(embed=Embed(title="I'm not playing anything", color=Worpal.color))
 
-    @app_commands.command(name="leave", description="Leave voice chat")
-    async def leave_command(self, interaction: Interaction) -> None:
-        await self.leave(interaction)
+    @app_commands.command(name="sutup", description="Leave voice chat")
+    async def sutup_command(self, interaction: Interaction) -> None:
+        await self.sutup(interaction)
 
-    async def leave(self, interaction: Interaction, user: User = None) -> None:
+    async def sutup(self, interaction: Interaction, user: User = None) -> None:
         await interaction.response.defer(ephemeral=True)
         voice: VoiceClient = interaction.guild.voice_client
         if voice:
             await voice.disconnect()
             self.bot.playing[interaction.guild.id] = None
             self.bot.music_queue[interaction.guild.id] = []
-            await interaction.followup.send(embed=Embed(title="Disconnected!", color=Worpal.color), ephemeral=True)
+            await interaction.followup.send(embed=Embed(title="Okay okay, chill bro!", color=Worpal.color))
             return
 
-        await interaction.followup.send(embed=Embed(title="I'm not connected to a voice channel", color=Worpal.color),
-                                        ephemeral=True)
+        await interaction.followup.send(embed=Embed(title="Dude I'm litteraly not playing anything! You sutup!", color=Worpal.color))
 
     clear = app_commands.Group(name="clear", description="...")
 

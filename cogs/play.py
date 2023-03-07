@@ -132,11 +132,11 @@ class Play(commands.Cog):
         self.play_next(interaction)
 
     def play_next(self, interaction: Interaction):
-        if len(self.bot.music_queue[interaction.guild.id]) == 0:
+        if self.bot.music_queue[interaction.guild.id]:
             return
 
         vc: VoiceClient = interaction.guild.voice_client
-        if vc is None or not isinstance(vc, VoiceClient):
+        if not vc:
             return
 
         if vc.is_playing():
@@ -169,13 +169,13 @@ class Play(commands.Cog):
         self.bot.playing[interaction.guild.id].start = dt.datetime.utcnow()
 
     async def play_music(self, interaction: Interaction):
-        if len(self.bot.music_queue[interaction.guild.id]) == 0:
+        if self.bot.music_queue[interaction.guild.id]:
             return
 
         m_url = self.bot.music_queue[interaction.guild.id][0].source
         vc: VoiceClient = interaction.guild.voice_client
 
-        if vc is None or not isinstance(vc, VoiceClient):
+        if not vc:
             vc = await self.bot.music_queue[interaction.guild.id][0].channel.connect()
 
         elif vc.channel != self.bot.music_queue[interaction.guild.id][0].channel:
@@ -254,12 +254,14 @@ class Play(commands.Cog):
             await interaction.followup.send(content="Couldn't play the song.", ephemeral=True)
             return
 
+        if track.spotify:
+            track.title += self.bot.get_emoji(944554099175727124)
         track.channel = user_vc
         self.bot.music_queue[interaction.guild.id].append(track)
         await interaction.followup.send(embed=playlist.get_embed() if playlist else track.get_embed())
         await self.play_music(interaction)
 
-        if playlist is not None:
+        if playlist:
             await process_query(self.bot, interaction, user_vc, playlist)
 
     @app_commands.command(name="playskip", description="Skip the current song and play the given one.")
@@ -297,7 +299,7 @@ class Play(commands.Cog):
         voice: VoiceClient = interaction.guild.voice_client
         user_vc = interaction.user.voice.channel
 
-        if len(self.bot.playing[interaction.guild.id]) == 0:
+        if self.bot.playing[interaction.guild.id]:
             await interaction.followup.send(content='You need to play a song before you can seek in it.')
             return
 

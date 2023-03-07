@@ -24,8 +24,11 @@ class Wynncraft(commands.GroupCog, name="wc"):
             return
 
         embed = Embed(
-            title=f"{'[' + meta['shortenedRank'] + ']' if meta['shortenedRank'] is not None else ''} {username}'s info",
-            color=meta['rank'])
+            title=f"{'[' + meta['shortenedRank'] + ']' if meta['shortenedRank'] else ''} {username}'s info",
+            color=meta['rank']
+        )
+        if meta['rank_icon']:
+            embed.set_image(url=meta['rank_icon'])
         embed.set_thumbnail(url=meta['avatar'])
         embed.add_field(name="First joined", value=meta['firstJoin'][:10], inline=True)
         embed.add_field(name="Last joined", value=meta['lastJoin'][:10], inline=True)
@@ -67,17 +70,23 @@ class Wynncraft(commands.GroupCog, name="wc"):
             match meta['supportRank']:
                 case 'VIP':
                     rank = 0x00aa00
+                    rank_icon = self.bot.get_emoji(1080896232978911252).url
                 case 'VIP+':
                     rank = 0x55ffff
+                    rank_icon = self.bot.get_emoji(1080896230265213079).url
                 case 'HERO':
                     rank = 0xff55ff
+                    rank_icon = self.bot.get_emoji(1080896168323715162).url
                 case 'CHAMPION':
                     rank = 0xffaa00
+                    rank_icon = self.bot.get_emoji(1080896126061907978).url
                 case _:
                     rank = 0x83c73d
+                    rank_icon = None
             return {
                 'avatar': avatar,
                 'rank': rank,
+                'rank_icon': rank_icon,
                 'shortenedRank': meta['shortenedRank'],
                 'firstJoin': meta['firstJoin'][:10],
                 'lastJoin': meta['lastJoin'][:10],

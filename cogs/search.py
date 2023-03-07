@@ -1,7 +1,7 @@
 import datetime as dt
 
-from nextcord import slash_command, SlashOption, Embed, ui, ButtonStyle, Interaction
-from nextcord.ext import commands
+from discord import app_commands, Embed, ui, ButtonStyle, Interaction
+from discord.ext import commands
 
 from api.YouTubeAPI import youtube_api_search
 from cogs.play import Play
@@ -54,9 +54,8 @@ class Search(commands.Cog):
     def __int__(self, bot: Worpal):
         self.bot = bot
 
-    @slash_command(name="search", description="Search for a song on youtube.")
-    async def search_(self, interaction: Interaction,
-                      q: str = SlashOption(name="title", description="The video to be found.", required=True)):
+    @app_commands.command(name="search", description="Search for a song on youtube.")
+    async def search_(self, interaction: Interaction, q: str):
         await interaction.response.defer()
         songs = youtube_api_search(Track(query=q))
         if songs:
@@ -83,11 +82,11 @@ class Search(commands.Cog):
                                         seconds=int(self.bot.music_queue[interaction.guild.id][-1][0]['duration']))),
                                     inline=True)
                     embed.set_footer(text="Song requested by: " + interaction.user.name)
-                    await interaction.send(embed=embed)
+                    await interaction.followup.send(embed=embed)
                     await Play(self.bot).play_music(interaction)
 
             else:
-                await interaction.send(content="Connect to a voice channel!", ephemeral=True)
+                await interaction.followup.send(content="Connect to a voice channel!", ephemeral=True)
 
         else:
             await interaction.followup.send(content="Error in getting the videos!")

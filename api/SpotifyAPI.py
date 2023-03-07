@@ -64,16 +64,14 @@ class SpotifyApi:
             name=res['name'],
             image=res['images'][0]['url'],
             owner=res['owner']['display_name'],
-            tracks=[
-                       Track(
-                           query=
-                           track['track']['name']
-                           + " - "
-                           + ", ".join(
-                               [
-                                   artist['name'] for artist in track['track']['artists']
-                               ]
-                           )
-                       ) for track in res['tracks']['items']
-                   ][:10]
+            tracks=[Track(query=
+                          track['track']['name']
+                          + " - "
+                          + ", ".join(
+                              [
+                                  artist['name'] for artist in track['track']['artists']
+                              ]
+                          )
+                          ) for track in res['tracks']['items']
+                    ][:10]
         )
