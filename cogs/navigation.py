@@ -28,7 +28,7 @@ class Navigation(commands.Cog):
             ),
             app_commands.ContextMenu(
                 name="Leave",
-                callback=self.leave
+                callback=self.sutup
             )
         ]
         for ctx_menu in self.ctx_menus:
