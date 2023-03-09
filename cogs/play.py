@@ -255,7 +255,7 @@ class Play(commands.Cog):
             return
 
         if track.spotify:
-            track.title += str(self.bot.get_emoji(944554099175727124))
+            track.title += " " + str(self.bot.get_emoji(944554099175727124))
         track.channel = user_vc
         self.bot.music_queue[interaction.guild.id].append(track)
         await interaction.followup.send(embed=playlist.get_embed() if playlist else track.get_embed())
