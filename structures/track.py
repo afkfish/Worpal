@@ -55,17 +55,15 @@ class Track:
     def progress_bar(self) -> str:
         bar = ""
         for i in range(11):
-            if i == self.get_progress()*12:
+            if i == math.floor(self.get_progress()*12):
                 bar += "⭕"
             else:
                 bar += "▬"
 
         return bar
 
-    def format_time(self) -> str:
-        seconds = math.floor(self.get_duration().seconds/1000.0)
-        hours = (str(seconds/(60*60)) + ":" if seconds/(60*60) > 0 else "")
-        seconds %= 60*60
-        minutes = ("0" + str(seconds/60) if seconds/60 < 10 else seconds/60)
-        seconds %= 60
-        return hours + minutes + ":" + ("0" + str(seconds) if seconds < 10 else seconds)
+    def format_progress(self) -> str:
+        seconds = math.floor(self.get_duration().seconds*self.get_progress())
+        progress = dt.timedelta(seconds=seconds)
+
+        return str(progress)

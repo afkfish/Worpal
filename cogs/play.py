@@ -38,10 +38,9 @@ def announce_song(bot: Worpal, interaction: Interaction, view=None) -> None:
     track = bot.playing[interaction.guild.id]
     embed = Embed(title="Currently playing:", color=bot.color)
     embed.set_thumbnail(url=track.thumbnail)
-    embed.set_footer(text=str(dt.timedelta(seconds=int(track.duration))))
 
     if view:
-        desc = f"{track.progress_bar()} `[{track.format_time()}/{track.format_time()}]`"
+        desc = f"{track.progress_bar()} `[{track.format_progress()}/{track.get_duration()}]`"
         embed.add_field(name=track.title, value=desc, inline=False)
         bot.loop.create_task(interaction.followup.send(embed=embed, view=view))
     else:
@@ -65,14 +64,15 @@ class Navigation(ui.View):
             self.bot.music_queue[interaction.guild.id].insert(0, self.bot.playing[interaction.guild.id])
             voice.stop()
             await Play(self.bot).play_music(interaction)
-            embed = Embed(title="Replaying 🔄")
-            await interaction.response.edit_message(embed=embed, view=self)
+            embed = Embed(title="Replaying 🔄", color=self.bot.color)
+            await interaction.response.edit_message(embed=embed, view=None)
             return
 
         await interaction.response.edit_message(view=self)
 
     @ui.button(emoji="▶️", style=ButtonStyle.grey)
     async def resume(self, interaction: Interaction, button: ui.Button):
+        self.stop()
         for child in self.children:
             child.disabled = False
         button.disabled = True
@@ -81,14 +81,15 @@ class Navigation(ui.View):
         voice: VoiceClient = interaction.guild.voice_client
         if voice and voice.is_paused():
             voice.resume()
-            embed = Embed(title="Resumed ▶️")
-            await interaction.response.edit_message(embed=embed, view=self)
+            embed = Embed(title="Resumed ▶️", color=self.bot.color)
+            await interaction.response.edit_message(embed=embed, view=None)
             return
 
         await interaction.response.edit_message(view=self)
 
     @ui.button(emoji="⏸️", style=ButtonStyle.grey)
     async def pause(self, interaction: Interaction, button: ui.Button):
+        self.stop()
         for child in self.children:
             child.disabled = False
         button.disabled = True
@@ -96,8 +97,8 @@ class Navigation(ui.View):
         voice: VoiceClient = interaction.guild.voice_client
         if voice and voice.is_playing():
             voice.pause()
-            embed = Embed(title="Paused ⏸️")
-            await interaction.response.edit_message(embed=embed, view=self)
+            embed = Embed(title="Paused ⏸️", color=self.bot.color)
+            await interaction.response.edit_message(embed=embed, view=None)
             return
 
         await interaction.response.edit_message(view=self)
@@ -112,8 +113,8 @@ class Navigation(ui.View):
         if voice:
             voice.stop()
             await Play(self.bot).play_music(interaction)
-            embed = Embed(title="Skipped ⏭️")
-            await interaction.response.edit_message(embed=embed, view=self)
+            embed = Embed(title="Skipped ⏭️", color=self.bot.color)
+            await interaction.response.edit_message(embed=embed, view=None)
             return
 
         await interaction.response.edit_message(view=self)
@@ -138,7 +139,7 @@ class Play(commands.Cog):
         # failsafe when the above code doesn't detect empty list
         try:
             temp = self.bot.music_queue[interaction.guild.id][0]
-        except KeyError | IndexError:
+        except IndexError:
             return
 
         vc: VoiceClient = interaction.guild.voice_client
