@@ -135,6 +135,12 @@ class Play(commands.Cog):
         if self.bot.music_queue[interaction.guild.id]:
             return
 
+        # failsafe when the above code doesn't detect empty list
+        try:
+            temp = self.bot.music_queue[interaction.guild.id][0]
+        except KeyError | IndexError:
+            return
+
         vc: VoiceClient = interaction.guild.voice_client
         if not vc:
             return

@@ -56,7 +56,10 @@ def youtube_search(track: Track) -> Track:
 
     # generate a list of video ids from response['items']
     # results = [item["id"]["videoId"] for item in response["items"]]
-    track.id = response["items"][0]["id"]["videoId"]
+    try:
+        track.id = response["items"][0]["id"]["videoId"]
+    except KeyError:
+        pass
 
     return track
 
@@ -73,7 +76,7 @@ def youtube_api_search(track: Track) -> Track:
     elif "watch?v=" in track.query:
         video_id = re.search(r"watch\?v=(.+?)", track.query).group(1)
     else:
-        return track
+        return youtubedl_search(track)
 
     if "&" in video_id:
         video_id = video_id.split("&")[0]
