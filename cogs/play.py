@@ -132,8 +132,8 @@ class Play(commands.Cog):
         self.play_next(interaction)
 
     def play_next(self, interaction: Interaction):
-        if self.bot.music_queue[interaction.guild.id]:
-            return
+        # if self.bot.music_queue[interaction.guild.id]:
+        #     return
 
         # failsafe when the above code doesn't detect empty list
         try:
