@@ -92,7 +92,7 @@ class Worpal(commands.Bot):
     def __del__(self):
         self.logger.info("Writing settings to file...")
         with open('./settings/settings.json', 'w', encoding="UTF-8") as file:
-            json.dump(self.settings, file, indent=4)
+            json.dump(self.settings, file, indent=2)
 
 
 class CustomFormatter(logging.Formatter):
