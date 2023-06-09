@@ -7,12 +7,11 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONFAULTHANDLER 1
 
 
-FROM base AS dependencies
+FROM base AS pipenv
 
 # Install pipenv and compilation dependencies
 RUN pip install pipenv
 RUN apt update
-RUN apt install -y --no-install-recommends gcc
 RUN apt install -y git
 
 # Install python dependencies in /.venv
@@ -23,11 +22,12 @@ RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
 
 FROM base AS runtime
 
-# Install ffmpeg for sound playing
+# install runtime dependencies
+RUN apt update
 RUN apt install -y ffmpeg
 
 # Copy virtual env from python-deps stage
-COPY --from=dependencies /.venv /.venv
+COPY --from=pipenv /.venv /.venv
 ENV PATH="/.venv/bin:$PATH"
 
 # Create and switch to a new user
