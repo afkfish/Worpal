@@ -17,6 +17,8 @@ class Help(commands.Cog):
         embed = self.get_page(0)
         await interaction.followup.send(embed=embed, view=view)
         await view.wait()
+        embed = self.get_page(view.page)
+        await interaction.edit_original_response(embed=embed, view=None)
 
     @staticmethod
     def get_page(n: int) -> Embed:

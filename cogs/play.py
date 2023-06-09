@@ -51,6 +51,7 @@ class Navigation(ui.View):
     def __init__(self, bot: Worpal):
         super().__init__(timeout=100)
         self.bot = bot
+        self.embed = None
 
     @ui.button(emoji="🔄", style=ButtonStyle.red, disabled=True)
     async def replay(self, interaction: Interaction, button: ui.Button):
@@ -61,50 +62,48 @@ class Navigation(ui.View):
         button.style = ButtonStyle.green
         voice: VoiceClient = interaction.guild.voice_client
         if voice:
+            self.embed = Embed(title="Replaying 🔄", color=self.bot.color)
             self.bot.music_queue[interaction.guild.id].insert(0, self.bot.playing[interaction.guild.id])
             voice.stop()
             await Play(self.bot).play_music(interaction)
-            embed = Embed(title="Replaying 🔄", color=self.bot.color)
-            await interaction.response.edit_message(embed=embed, view=None)
+            await interaction.response.edit_message(embed=self.embed, view=None)
             return
 
         await interaction.response.edit_message(view=self)
 
     @ui.button(emoji="▶️", style=ButtonStyle.grey)
     async def resume(self, interaction: Interaction, button: ui.Button):
-        self.stop()
         for child in self.children:
             child.disabled = False
         button.disabled = True
         button.style = ButtonStyle.green
-        await interaction.response.edit_message(view=self)
         voice: VoiceClient = interaction.guild.voice_client
         if voice and voice.is_paused():
+            self.embed = Embed(title="Resumed ▶️", color=self.bot.color)
             voice.resume()
-            embed = Embed(title="Resumed ▶️", color=self.bot.color)
-            await interaction.response.edit_message(embed=embed, view=None)
+            await interaction.response.edit_message(embed=self.embed, view=None)
             return
 
         await interaction.response.edit_message(view=self)
 
     @ui.button(emoji="⏸️", style=ButtonStyle.grey)
     async def pause(self, interaction: Interaction, button: ui.Button):
-        self.stop()
         for child in self.children:
             child.disabled = False
         button.disabled = True
         button.style = ButtonStyle.green
         voice: VoiceClient = interaction.guild.voice_client
         if voice and voice.is_playing():
+            self.embed = Embed(title="Paused ⏸️", color=self.bot.color)
             voice.pause()
-            embed = Embed(title="Paused ⏸️", color=self.bot.color)
-            await interaction.response.edit_message(embed=embed, view=None)
+            await interaction.response.edit_message(embed=self.embed, view=None)
             return
 
         await interaction.response.edit_message(view=self)
 
     @ui.button(emoji="⏭️", style=ButtonStyle.grey)
     async def skip(self, interaction: Interaction, button: ui.Button):
+        self.embed = Embed(title="Skipped ⏭️", color=self.bot.color)
         self.stop()
         for child in self.children:
             child.disabled = True
@@ -113,8 +112,7 @@ class Navigation(ui.View):
         if voice:
             voice.stop()
             await Play(self.bot).play_music(interaction)
-            embed = Embed(title="Skipped ⏭️", color=self.bot.color)
-            await interaction.response.edit_message(embed=embed, view=None)
+            await interaction.response.edit_message(embed=self.embed, view=None)
             return
 
         await interaction.response.edit_message(view=self)
@@ -354,6 +352,7 @@ class Play(commands.Cog):
             view = Navigation(self.bot)
             announce_song(self.bot, interaction, view)
             await view.wait()
+            await interaction.edit_original_response(embed=view.embed, view=None)
 
         else:
             await interaction.followup.send(content="No song has been played yet!", ephemeral=True)

@@ -24,6 +24,8 @@ class Image(commands.Cog):
         embed = self.get_page(0)
         await interaction.followup.send(embed=embed, view=self.view)
         await self.view.wait()
+        embed = self.get_page(self.view.page)
+        await interaction.edit_original_response(embed=embed, view=None)
 
     def get_page(self, page: int) -> Embed:
         embed = Embed(title=f"Images for: {self.query}", color=Worpal.color)
