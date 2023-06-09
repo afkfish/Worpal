@@ -13,7 +13,6 @@ FROM base AS dependencies
 RUN pip install pipenv
 RUN apt update
 RUN apt install -y --no-install-recommends gcc
-RUN apt install -y ffmpeg
 RUN apt install -y git
 
 # Install python dependencies in /.venv
@@ -23,6 +22,10 @@ RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
 
 
 FROM base AS runtime
+
+# Install ffmpeg for sound playing
+RUN apt install -y ffmpeg
+
 # Copy virtual env from python-deps stage
 COPY --from=dependencies /.venv /.venv
 ENV PATH="/.venv/bin:$PATH"
