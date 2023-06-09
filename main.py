@@ -132,6 +132,7 @@ async def main() -> None:
     exts = [
         'play',
         'navigation',
+        'image',
         'settings',
         'help',
         # 'search', TODO: fix search with api

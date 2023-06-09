@@ -1,54 +1,8 @@
 from discord import Interaction, Embed, app_commands, ui, ButtonStyle, InteractionMessage
 from discord.ext import commands
 
+from cogs.helper.paged_embed import EmbedNavigator
 from main import Worpal
-
-
-class Navigation(ui.View):
-    def __init__(self, bot: Worpal, original_interaction: Interaction):
-        super().__init__(timeout=180)
-        self.bot = bot
-        self.original_interaction = original_interaction
-        self.page = 0
-        self.max = 3
-
-    @ui.button(emoji="⬅️", style=ButtonStyle.grey, disabled=True)
-    async def prev(self, interaction: Interaction, button: ui.Button):
-        if self.page >= 1:
-            self.page -= 1
-            for item in self.children:
-                if isinstance(item, ui.Button):
-                    item.disabled = False
-
-        if self.page <= 0:
-            button.disabled = True
-            self.page = 0
-
-        await interaction.response.edit_message(embed=Help.get_page(self.page), view=self)
-
-    @ui.button(emoji="➡️", style=ButtonStyle.grey)
-    async def next(self, interaction: Interaction, button: ui.Button):
-        if self.page < self.max:
-            self.page += 1
-            for item in self.children:
-                if isinstance(item, ui.Button):
-                    item.disabled = False
-
-        if self.page >= self.max:
-            button.disabled = True
-            self.page = self.max
-
-        await interaction.response.edit_message(embed=Help.get_page(self.page), view=self)
-
-    @ui.button(emoji="❌", style=ButtonStyle.grey)
-    async def delete(self, interaction: Interaction, button: ui.Button):
-        self.stop()
-        for item in self.children:
-            if isinstance(item, ui.Button):
-                item.disabled = True
-
-        message: InteractionMessage = await self.original_interaction.original_response()
-        await message.delete()
 
 
 class Help(commands.Cog):
@@ -59,21 +13,10 @@ class Help(commands.Cog):
     @app_commands.command(name="help", description="help info")
     async def help(self, interaction: Interaction):
         await interaction.response.defer()
-        view = Navigation(self.bot, interaction)
+        view = EmbedNavigator(self.bot, interaction, self, 3)
         embed = self.get_page(0)
         await interaction.followup.send(embed=embed, view=view)
         await view.wait()
-
-    #         # case "lyrics":
-    #         # 	embed.title = "Lyrics"
-    #         # 	embed.add_field(name="Usage:", value="The lyrics command tries to find the song on genius and sends "
-    #         # 										 "back the lyrics if it succeded. Not every song will 100% have a "
-    #         # 										 "lyric. If you are sure it has, but it is not available on genius "
-    #         # 										 "than the subtitle command could help.")
-    #         # case "ping":
-    #         # 	embed.title = "Ping"
-    #         # 	embed.add_field(name="Usage:", value="The ping command measures the latency from the server to the "
-    #         # 										 "client in miliseconds.")
 
     @staticmethod
     def get_page(n: int) -> Embed:
