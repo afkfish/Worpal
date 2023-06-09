@@ -2,15 +2,11 @@ import asyncio
 import json
 import logging
 import os
-import time
-from threading import Thread
 
 import discord
-import schedule
-from discord import Guild, VoiceClient, Member, VoiceState, Embed
+from discord import Guild, VoiceClient, Member, VoiceState
 from discord.ext import commands
 
-from cogs.wynncraft import Wynncraft
 from structures.track import Track
 
 
@@ -121,21 +117,21 @@ class CustomFormatter(logging.Formatter):
         return formatter.format(record)
 
 
-def wc_schedule(bot: Worpal):
-    anon_embed = Wynncraft(bot).player_embed("Anon08")
-    anon_embed = anon_embed if anon_embed else Embed(title="oh no")
-    origin_embed = Wynncraft(bot).player_embed("Origin_VXS")
-    near_embed = Wynncraft(bot).player_embed("Near_End")
-    schedule.every().day.at("19:00").do(lambda: {
-        bot.loop.create_task(
-            bot.get_channel(940575531567546372)
-            .send(embeds=[anon_embed, origin_embed, near_embed])
-        )
-    })
-
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
+# def wc_schedule(bot: Worpal):
+#     anon_embed = Wynncraft(bot).player_embed("Anon08")
+#     anon_embed = anon_embed if anon_embed else Embed(title="oh no")
+#     origin_embed = Wynncraft(bot).player_embed("Origin_VXS")
+#     near_embed = Wynncraft(bot).player_embed("Near_End")
+#     schedule.every().day.at("19:00").do(lambda: {
+#         bot.loop.create_task(
+#             bot.get_channel(940575531567546372)
+#             .send(embeds=[anon_embed, origin_embed, near_embed])
+#         )
+#     })
+#
+#     while True:
+#         schedule.run_pending()
+#         time.sleep(1)
 
 
 async def main() -> None:
