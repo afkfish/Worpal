@@ -2,11 +2,15 @@ import asyncio
 import json
 import logging
 import os
+import time
+from threading import Thread
 
 import discord
-from discord import Guild, VoiceClient, Member, VoiceState
+import schedule
+from discord import Guild, VoiceClient, Member, VoiceState, Embed
 from discord.ext import commands
 
+from cogs.wynncraft import Wynncraft
 from structures.track import Track
 
 
@@ -96,7 +100,6 @@ class Worpal(commands.Bot):
 
 
 class CustomFormatter(logging.Formatter):
-
     grey = "\x1b[38;20m"
     yellow = "\x1b[33;20m"
     red = "\x1b[31;20m"
@@ -116,6 +119,23 @@ class CustomFormatter(logging.Formatter):
         log_fmt = self.FORMATS.get(record.levelno)
         formatter = logging.Formatter(log_fmt)
         return formatter.format(record)
+
+
+def wc_schedule(bot: Worpal):
+    anon_embed = Wynncraft(bot).player_embed("Anon08")
+    anon_embed = anon_embed if anon_embed else Embed(title="oh no")
+    origin_embed = Wynncraft(bot).player_embed("Origin_VXS")
+    near_embed = Wynncraft(bot).player_embed("Near_End")
+    schedule.every().day.at("19:00").do(lambda: {
+        bot.loop.create_task(
+            bot.get_channel(940575531567546372)
+            .send(embeds=[anon_embed, origin_embed, near_embed])
+        )
+    })
+
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
 
 
 async def main() -> None:
@@ -139,8 +159,12 @@ async def main() -> None:
         'wynncraft',
         'utils'
     ]
+    bot = Worpal(exts, 940575531567546369)
 
-    await Worpal(exts, 940575531567546369).start(os.getenv('BOT_TOKEN'))
+    # scheduled_thread = Thread(target=wc_schedule, args=(bot,))
+    # scheduled_thread.start()
+
+    await bot.start(os.getenv('BOT_TOKEN'))
 
 
 if __name__ == '__main__':

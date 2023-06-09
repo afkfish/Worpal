@@ -13,15 +13,10 @@ class Wynncraft(commands.GroupCog, name="wc"):
         self.bot = bot
         self.url = "https://web-api.wynncraft.com/api/v3/"
 
-    @app_commands.command(name="info", description="Get a player's info")
-    async def info(self, interaction: Interaction, username: str):
-        await interaction.response.defer()
-
+    async def player_embed(self, username: str) -> bool | Embed:
         meta = self.get_wc_info(username.lower())
         if not meta:
-            self.bot.logger.error("Error getting %s's info!", username)
-            await interaction.followup.send(f"Error getting {username}'s info")
-            return
+            return False
 
         embed = Embed(
             title=f"{'[' + meta['shortenedRank'] + ']' if meta['shortenedRank'] else ''} {username}'s info",
@@ -36,6 +31,18 @@ class Wynncraft(commands.GroupCog, name="wc"):
                         value=f"Online on {meta['location']['server']}" if meta['location']['online'] else "Offline",
                         inline=False)
         embed.add_field(name="Hours played", value=f"{meta['playtime']}", inline=False)
+
+        return embed
+
+    @app_commands.command(name="info", description="Get a player's info")
+    async def info(self, interaction: Interaction, username: str):
+        await interaction.response.defer()
+
+        embed = self.player_embed(username.lower())
+        if not embed:
+            self.bot.logger.error("Error getting %s's info!", username)
+            await interaction.followup.send(f"Error getting {username}'s info")
+            return
 
         await interaction.followup.send(embed=embed)
 

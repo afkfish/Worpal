@@ -12,4 +12,5 @@ PyNaCl = "*"
 requests = "*"
 google-api-python-client = "*"
 discord.py = { extras = ['speed'], version = ">=2.2.3" }
+schedule = "*"
 youtube-dl = {editable = true, ref = "master", git = "https://github.com/ytdl-org/youtube-dl.git"}
