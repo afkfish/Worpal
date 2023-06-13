@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "09e51c19534e422bb5ceb22f66b1155050b42804b16a08cde8c6522ed5e805df"
+            "sha256": "8ada0c65568f4a0197531b6cd19c791a8180aff809eef4870f6332e3d261c772"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -309,19 +309,19 @@
         },
         "discord": {
             "hashes": [
-                "sha256:a8de4ed7529930fb655ac0fb73e016f7e647165de5877ff66dbcb395717b7690",
-                "sha256:b170972fc97e0582f2e4cbb1e2774f1324aae43d451a4f094212e88f22e564a5"
+                "sha256:c48db74a1eb0dd9ffc6cd7fe25a90bbc8f0ad8bde8211d898dc89c6d88d08836",
+                "sha256:e20b9af97a91d321d09aad7bbeb45ad6c50a2784bdd739d1d7be480baf96b905"
             ],
             "index": "pypi",
-            "version": "==2.2.3"
+            "version": "==2.3.0"
         },
         "discord.py": {
             "hashes": [
-                "sha256:792bdcfe71cfe013c446cf379b2e83e08b5050604322ad6fb592864e63511abd",
-                "sha256:f9df95795c6f52c5db43b7ab43634993e12ef233288636a759166dd9c134d077"
+                "sha256:3e9498967822ad4499f8f72deb9173f942d9827d92b6e4e4e7732d24f78f300c",
+                "sha256:c71066a30f037d069218e59092505c3e8945fd175e396a80748056d989756806"
             ],
             "markers": "python_full_version >= '3.8.0'",
-            "version": "==2.2.3"
+            "version": "==2.3.0"
         },
         "frozenlist": {
             "hashes": [
@@ -413,11 +413,11 @@
         },
         "google-api-python-client": {
             "hashes": [
-                "sha256:37068453f79ea28e5394a8fe20a4ba620594e7f8541068bea2e844dacdcc9d33",
-                "sha256:d003008400a779524ea21b5a3ddc6fc59327d401fb8c37c466d413694c279cae"
+                "sha256:0b0c9503df2da92692ffceee88423ca593cbf0b939d879e2c46fbdc1a39cf091",
+                "sha256:272ff339928ac35b1e117d30e5db444fb701803bb748bb29e7bb520be29dea36"
             ],
             "index": "pypi",
-            "version": "==2.88.0"
+            "version": "==2.89.0"
         },
         "google-auth": {
             "hashes": [
@@ -436,11 +436,11 @@
         },
         "googleapis-common-protos": {
             "hashes": [
-                "sha256:4168fcb568a826a52f23510412da405abd93f4d23ba544bb68d943b14ba3cb44",
-                "sha256:b287dc48449d1d41af0c69f4ea26242b5ae4c3d7249a38b0984c86a4caffff1f"
+                "sha256:0cbedb6fb68f1c07e18eb4c48256320777707e7d0c55063ae56c15db3224a61e",
+                "sha256:b35d530fe825fb4227857bc47ad84c33c809ac96f312e13182bdeaa2abe1178a"
             ],
             "markers": "python_version >= '3.7'",
-            "version": "==1.59.0"
+            "version": "==1.59.1"
         },
         "httplib2": {
             "hashes": [
@@ -743,7 +743,7 @@
         "youtube-dl": {
             "editable": true,
             "git": "https://github.com/ytdl-org/youtube-dl.git",
-            "ref": "b8a86dcf1aa837577178ae25357d8241ab4ba6c1"
+            "ref": "a2534f7b888416e872d5afd1862eb3e30fc69fc7"
         }
     },
     "develop": {}
