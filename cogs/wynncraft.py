@@ -13,7 +13,7 @@ class Wynncraft(commands.GroupCog, name="wc"):
         self.bot = bot
         self.url = "https://web-api.wynncraft.com/api/v3/"
 
-    async def player_embed(self, username: str) -> bool | Embed:
+    def player_embed(self, username: str) -> bool | Embed:
         meta = self.get_wc_info(username.lower())
         if not meta:
             return False
