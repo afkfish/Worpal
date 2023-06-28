@@ -1,4 +1,4 @@
-import dataclasses
+from dataclasses import dataclass
 import datetime as dt
 import math
 from datetime import timedelta
@@ -7,29 +7,19 @@ import discord
 from discord import VoiceChannel, Embed
 
 
-@dataclasses.dataclass
+@dataclass
 class Track:
-    def __init__(
-            self,
-            query: str = None,
-            title: str = None,
-            source: str = None,
-            thumbnail: str = None,
-            duration: int = 0,
-            user: discord.User = None,
-            spotify: bool = False
-    ):
-        self.query = query
-        self.id = None
-        self.title = title
-        self.source = source
-        self.thumbnail = thumbnail
-        self.duration = duration
-        self.user = user
-        self.spotify = spotify
-        self.artists = []
-        self.start: dt.datetime = dt.datetime.utcnow()
-        self.channel: VoiceChannel
+    query: str
+    user: discord.User
+    spotify: bool
+    artists: [str] = None
+    id: str = None
+    title: str = None
+    source: str = None
+    thumbnail: str = None
+    duration: int = 0
+    channel: VoiceChannel = None
+    start: dt.datetime = dt.datetime.utcnow()
 
     def get_embed(self) -> Embed:
         embed = Embed(color=0x152875, title=self.title)

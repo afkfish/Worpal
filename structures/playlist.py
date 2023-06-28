@@ -1,23 +1,16 @@
-import dataclasses
+from dataclasses import dataclass
 
 from discord import Embed
 
 from structures.track import Track
 
 
-@dataclasses.dataclass
+@dataclass
 class PlayList:
-    def __init__(
-            self,
-            name: str,
-            image: str = None,
-            owner: str = None,
-            tracks: [Track] = None
-    ):
-        self.name = name
-        self.image = image
-        self.owner = owner
-        self.tracks = tracks
+    name: str
+    image: str = None
+    owner: str = None
+    tracks: [Track] = None
 
     def get_embed(self) -> Embed:
         embed = Embed(color=0x152875, title="Playlist added from spotify")
