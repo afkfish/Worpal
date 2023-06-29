@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import datetime as dt
 import math
 from datetime import timedelta
@@ -12,7 +12,7 @@ class Track:
     query: str
     user: discord.User
     spotify: bool
-    artists: [str] = None
+    artists: [str] = field(default_factory=list)
     id: str = None
     title: str = None
     source: str = None
