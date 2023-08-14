@@ -20,7 +20,7 @@ playlist_pattern = re.compile(r"https://open\.spotify\.com/playlist/[A-Za-z0-9]+
 
 async def process_query(bot: Worpal, interaction: Interaction, user_vc, playlist: PlayList):
     for track in playlist.tracks:
-        track = get_link(track)
+        track = await get_link(track)
         playlist.tracks.pop(0)
         if track.is_valid():
             track.channel = user_vc
@@ -126,17 +126,14 @@ class Play(commands.Cog):
     def play_interrupt_handler(self, interaction: Interaction, error):
         if error:
             self.bot.logger.error(error)
-            interaction.channel.send(Embed(title="There was an error while trying to play the song."))
+            interaction.channel.send(embed=Embed(title="There was an error while trying to play the song."))
 
         self.play_next(interaction)
 
     def play_next(self, interaction: Interaction):
-        # if self.bot.music_queue[interaction.guild.id]:
-        #     return
-
         # failsafe when the above code doesn't detect empty list
         try:
-            temp = self.bot.music_queue[interaction.guild.id][0]
+            self.bot.music_queue[interaction.guild.id][0]
         except IndexError:
             return
 
@@ -221,7 +218,7 @@ class Play(commands.Cog):
         user_vc = interaction.user.voice.channel
         playlist = None
         if "open.spotify.com" not in query:
-            track = get_link(track)
+            track = await get_link(track)
             if not track.is_valid():
                 await interaction.followup.send(content="Couldn't play the song.", ephemeral=True)
                 return
@@ -246,15 +243,15 @@ class Play(commands.Cog):
         elif playlist_pattern.match(query):
             try:
                 playlist_id = re.search(r"playlist/(.+?)\?si", query).group(1)
-                playlist = SpotifyApi().get_playlist(playlist_id=playlist_id)
+                playlist = SpotifyApi().get_playlist(playlist_id=playlist_id, user=interaction.user)
             except AttributeError:
                 interaction.followup.send(embed=Embed(title="Error in getting playlist from spotify!"))
                 return
 
             interaction.followup.send(embed=playlist.get_embed())
-            track = playlist.tracks[0]
+            track = playlist.tracks.pop(0)
 
-        track = get_link(track)
+        track = await get_link(track)
         if not track.is_valid():
             await interaction.followup.send(content="Couldn't play the song.", ephemeral=True)
             return
@@ -277,7 +274,7 @@ class Play(commands.Cog):
         # first we check if the song can be played, so we are not interrupting
         # if something is already playing
         track = Track(query=query, user=interaction.user)
-        track = get_link(track)
+        track = await get_link(track)
 
         if not track.is_valid():
             await interaction.followup.send(content="Couldn't play the song.", ephemeral=True)
@@ -356,36 +353,6 @@ class Play(commands.Cog):
 
         else:
             await interaction.followup.send(content="No song has been played yet!", ephemeral=True)
-
-
-# still in beta and not working properly
-# @app_commands.command(name="lyrics",
-# 			   description="test",
-# 			   guild_ids=[940575531567546369])
-# async def lyrics(self, interaction):
-# 	await interaction.response.defer()
-# 	embed = Embed(title="Song Lyrics:", color=bot.color)
-#
-# 	try:
-# 		song = GeniusApi().get_song(bot.playing[interaction.guild.id][0]['title'])
-# 		lyrics = get_lyrics(song)
-# 		ly = []
-# 		for i in range(round(len(lyrics) / 1024) - 1):
-# 			ly.append(lyrics[i:i + 1024])
-# 		embed.add_field(name=song["title"], value=embeds.EmptyEmbed)
-# 		embed.set_thumbnail(url=bot.playing[interaction.guild.id][0]['thumbnail'])
-# 		print(ly)
-# 		print(len(ly))
-# 		embedl = [embed]
-# 		for block in ly:
-# 			nembed = Embed(title=embeds.EmptyEmbed, color=bot.color)
-# 			nembed.add_field(name=embeds.EmptyEmbed, value=block)
-# 			embedl.append(nembed)
-# 		print(embedl)
-# 		await interaction.followup.send(embeds=embedl[:10])
-# 	except IndexError as ex:
-# 		print(f"{type(ex).__name__} {ex}")
-# 		await interaction.followup.send(content=f"Error: {ex}")
 
 
 async def setup(bot):

@@ -11,7 +11,7 @@ from discord import VoiceChannel, Embed
 class Track:
     query: str
     user: discord.User
-    spotify: bool
+    spotify: bool = False
     artists: [str] = field(default_factory=list)
     id: str = None
     title: str = None

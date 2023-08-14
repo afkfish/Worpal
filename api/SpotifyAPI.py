@@ -2,6 +2,7 @@ import base64
 import os
 from urllib.parse import urlencode
 
+import discord
 import requests
 
 from structures.playlist import PlayList
@@ -50,7 +51,7 @@ class SpotifyApi:
         res = requests.get(url="https://api.spotify.com/v1/search?" + urlencode(link), headers=headers)
         return res.json()
 
-    def get_playlist(self, playlist_id) -> PlayList:
+    def get_playlist(self, playlist_id, user: discord.User) -> PlayList:
         r = requests.post(self.url, headers=self.headers, data=self.data)
         token = r.json()['access_token']
 
@@ -71,7 +72,9 @@ class SpotifyApi:
                               [
                                   artist['name'] for artist in track['track']['artists']
                               ]
-                          )
+                          ),
+                          user=user,
+                          spotify=True
                           ) for track in res['tracks']['items']
                     ][:10]
         )

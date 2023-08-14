@@ -15,7 +15,7 @@ YDL_OPTIONS = {"format": "bestaudio/best", "noplaylist": True, "quiet": True}
 logger = logging.getLogger("YouTubeAPI")
 
 
-def youtubedl_search(track: Track) -> Track:
+async def youtubedl_search(track: Track) -> Track:
     logger.info("YoutubeDL search: %s", track.query)
     with YoutubeDL(YDL_OPTIONS) as ydl:
         try:
@@ -39,7 +39,7 @@ def youtubedl_search(track: Track) -> Track:
     return track
 
 
-def youtube_search(track: Track) -> Track:
+async def youtube_search(track: Track) -> Track:
     api_service_name = "youtube"
     api_version = "v3"
 
@@ -68,7 +68,7 @@ magic_url = "https://www.youtube.com/youtubei/v1/player"
 embed_key = "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8"
 
 
-def youtube_api_search(track: Track) -> Track:
+async def youtube_api_search(track: Track) -> Track:
     if track.id is not None:
         video_id = track.id
     elif "youtu.be" in track.query:
@@ -76,7 +76,7 @@ def youtube_api_search(track: Track) -> Track:
     elif "watch?v=" in track.query:
         video_id = re.search(r"watch\?v=(.+?)", track.query).group(1)
     else:
-        return youtubedl_search(track)
+        return await youtubedl_search(track)
 
     if "&" in video_id:
         video_id = video_id.split("&")[0]
@@ -108,7 +108,7 @@ def youtube_api_search(track: Track) -> Track:
             return track
     except exceptions.RequestException:
         logger.error(f"YouTube API error, trying with YoutubeDL")
-        return youtubedl_search(track)
+        return await youtubedl_search(track)
 
     try:
         audio_only = [stream for stream in json_data['streamingData']['adaptiveFormats'] if
@@ -121,15 +121,15 @@ def youtube_api_search(track: Track) -> Track:
         return track
     except KeyError:
         logger.error(f"Error in getting {video_id}")
-        return youtubedl_search(track)
+        return await youtubedl_search(track)
 
 
-def get_link(track: Track) -> Track:
+async def get_link(track: Track) -> Track:
     result = urlparse(track.query)
     if all([result.scheme, result.netloc]):
         logger.info("YouTube link detected")
-        return youtube_api_search(track)
+        return await youtube_api_search(track)
     else:
         logger.info("YouTube search detected")
-        music_id = youtube_search(track)
-        return youtube_api_search(music_id)
+        youtube_track = await youtube_search(track)
+        return await youtube_api_search(youtube_track)
