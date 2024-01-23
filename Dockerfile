@@ -1,4 +1,4 @@
-FROM python:3.12-slim AS base
+FROM python:3.12 AS base
 
 # Setup env
 ENV LANG C.UTF-8
@@ -20,7 +20,7 @@ COPY Pipfile.lock .
 RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
 
 
-FROM base AS runtime
+FROM python:3.12-slim AS runtime
 
 # install runtime dependencies
 RUN apt update
