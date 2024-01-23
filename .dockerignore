@@ -9,3 +9,7 @@
 !settings/
 !structures/
 !main.py
+.env*
+.flaskenv*
+!.env.project
+!.env.vault

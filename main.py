@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import os
+from dotenv_vault import  load_dotenv
 
 import discord
 from discord import Guild, VoiceClient, Member, VoiceState
@@ -135,6 +136,8 @@ class CustomFormatter(logging.Formatter):
 
 
 async def main() -> None:
+    load_dotenv()
+
     ch = logging.StreamHandler()
     ch.setLevel(logging.INFO)
     ch.setFormatter(CustomFormatter())

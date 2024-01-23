@@ -1,3 +1,7 @@
 /secrets.json
 /playlists/*
 /settings/*
+.env*
+.flaskenv*
+!.env.project
+!.env.vault
