@@ -13,3 +13,4 @@
 .flaskenv*
 !.env.project
 !.env.vault
+!restart.py
