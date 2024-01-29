@@ -1,3 +1,6 @@
+import os
+import sys
+
 import discord
 from discord import app_commands, Interaction
 from discord.ext import commands
@@ -5,7 +8,7 @@ from discord.ext import commands
 from main import Worpal
 
 
-@app_commands.guilds(discord.Object(str(940575531567546369)))
+@app_commands.guilds(discord.Object(663825004256952342), discord.Object(940575531567546369))
 class Debug(commands.Cog):
     def __init__(self, bot: Worpal):
         self.bot = bot
@@ -13,6 +16,11 @@ class Debug(commands.Cog):
     @app_commands.command()
     async def ping(self, interaction: Interaction):
         await interaction.response.send_message(f"Pong! {round(self.bot.latency * 1000)}ms")
+
+    @app_commands.command()
+    async def reload(self, interaction: Interaction):
+        await interaction.response.send_message("Reloading in 5s!")
+        os.execv(sys.executable, ["python3"] + ["restart.py"])
 
 
 async def setup(bot):
