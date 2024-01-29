@@ -2,7 +2,7 @@ import os
 import sys
 
 import discord
-from discord import app_commands, Interaction
+from discord import app_commands, Interaction, VoiceClient
 from discord.ext import commands
 
 from main import Worpal
@@ -20,6 +20,10 @@ class Debug(commands.Cog):
     @app_commands.command()
     async def reload(self, interaction: Interaction):
         await interaction.response.send_message("Reloading in 5s!")
+        vc: VoiceClient = interaction.guild.voice_client
+        if vc:
+            await vc.disconnect(force=True)
+
         os.execv(sys.executable, ["python3"] + ["restart.py"])
 
 
