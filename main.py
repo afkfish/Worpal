@@ -2,11 +2,12 @@ import asyncio
 import json
 import logging
 import os
-from dotenv_vault import  load_dotenv
+import uuid
 
 import discord
 from discord import Guild, VoiceClient, Member, VoiceState
 from discord.ext import commands
+from dotenv_vault import load_dotenv
 
 from structures.track import Track
 
@@ -24,9 +25,9 @@ class Worpal(commands.Bot):
         self.remove_command('help')
         self.logger = logging.getLogger('Worpal')
         self.logger.setLevel(logging.INFO)
-        self.music_queue: {int: [Track]} = {}
-        self.playing: {int: Track} = {}
-        self.mc_uuids = {}
+        self.music_queue: dict[int, [Track]] = {}
+        self.playing: dict[int, Track | None] = {}
+        self.minecraft_uuid_cache: dict[str, uuid.UUID] = {}
         self.settings = {}
         with open('./settings/settings.json', 'r', encoding='UTF-8') as file:
             self.settings = json.load(file)
@@ -64,12 +65,12 @@ class Worpal(commands.Bot):
                     }
                 })
             self.music_queue[guild.id] = []
-            self.playing[guild.id] = ''
+            self.playing[guild.id] = None
 
     async def on_guid_join(self, guild: Guild):
         self.settings.update({str(guild.id): {'announce': False, 'shuffle': False, 'loop': False}})
         self.music_queue[guild.id] = []
-        self.playing[guild.id] = ''
+        self.playing[guild.id] = None
 
     async def on_voice_state_update(self, member: Member, before: VoiceState, after: VoiceState):
         if before.channel:
