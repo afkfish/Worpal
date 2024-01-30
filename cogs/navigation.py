@@ -43,7 +43,7 @@ class Navigation(commands.Cog):
         await self.skip(interaction)
 
     async def skip(self, interaction: Interaction, user: User = None) -> None:
-        await interaction.response().defer()
+        await interaction.response.defer()
         voice: VoiceClient = interaction.guild.voice_client
         if voice:
             voice.stop()
@@ -58,7 +58,7 @@ class Navigation(commands.Cog):
         await self.pause(interaction)
 
     async def pause(self, interaction: Interaction, user: User = None) -> None:
-        await interaction.response().defer()
+        await interaction.response.defer()
         voice: VoiceClient = interaction.guild.voice_client
         if voice and voice.is_playing():
             voice.pause()
@@ -72,7 +72,7 @@ class Navigation(commands.Cog):
         await self.resume(interaction)
 
     async def resume(self, interaction: Interaction, user: User = None) -> None:
-        await interaction.response().defer()
+        await interaction.response.defer()
         voice: VoiceClient = interaction.guild.voice_client
         if voice and voice.is_paused():
             voice.resume()
@@ -86,7 +86,7 @@ class Navigation(commands.Cog):
         await self.stop(interaction)
 
     async def stop(self, interaction: Interaction, user: User = None) -> None:
-        await interaction.response().defer()
+        await interaction.response.defer()
         voice: VoiceClient = interaction.guild.voice_client
         if voice:
             voice.stop()
@@ -101,7 +101,7 @@ class Navigation(commands.Cog):
         await self.sutup(interaction)
 
     async def sutup(self, interaction: Interaction, user: User = None) -> None:
-        await interaction.response().defer(ephemeral=True)
+        await interaction.response.defer(ephemeral=True)
         voice: VoiceClient = interaction.guild.voice_client
         if voice:
             await voice.disconnect()
@@ -116,7 +116,7 @@ class Navigation(commands.Cog):
 
     @clear.command(name="duplicates", description="Clear duplicated songs from queue.")
     async def clear_dup(self, interaction: Interaction) -> None:
-        await interaction.response().defer()
+        await interaction.response.defer()
         if self.bot.music_queue[interaction.guild.id]:
             res = list(dict.fromkeys(self.bot.music_queue[interaction.guild.id]))
             self.bot.music_queue[interaction.guild.id] = res
@@ -132,7 +132,7 @@ class Navigation(commands.Cog):
 
     @clear.command(name="all", description="Clear all songs from queue.")
     async def clear_all(self, interaction: Interaction) -> None:
-        await interaction.response().defer()
+        await interaction.response.defer()
         if self.bot.music_queue[interaction.guild.id]:
             self.bot.music_queue[interaction.guild.id] = []
 

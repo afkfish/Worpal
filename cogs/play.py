@@ -66,10 +66,10 @@ class Navigation(ui.View):
             self.bot.music_queue[interaction.guild.id].insert(0, self.bot.playing[interaction.guild.id])
             voice.stop()
             await Play(self.bot).play_music(interaction)
-            await interaction.response().edit_message(embed=self.embed, view=None)
+            await interaction.response.edit_message(embed=self.embed, view=None)
             return
 
-        await interaction.response().edit_message(view=self)
+        await interaction.response.edit_message(view=self)
 
     @ui.button(emoji="▶️", style=ButtonStyle.grey)
     async def resume(self, interaction: Interaction, button: ui.Button):
@@ -81,10 +81,10 @@ class Navigation(ui.View):
         if voice and voice.is_paused():
             self.embed = Embed(title="Resumed ▶️", color=self.bot.color)
             voice.resume()
-            await interaction.response().edit_message(embed=self.embed, view=None)
+            await interaction.response.edit_message(embed=self.embed, view=None)
             return
 
-        await interaction.response().edit_message(view=self)
+        await interaction.response.edit_message(view=self)
 
     @ui.button(emoji="⏸️", style=ButtonStyle.grey)
     async def pause(self, interaction: Interaction, button: ui.Button):
@@ -96,10 +96,10 @@ class Navigation(ui.View):
         if voice and voice.is_playing():
             self.embed = Embed(title="Paused ⏸️", color=self.bot.color)
             voice.pause()
-            await interaction.response().edit_message(embed=self.embed, view=None)
+            await interaction.response.edit_message(embed=self.embed, view=None)
             return
 
-        await interaction.response().edit_message(view=self)
+        await interaction.response.edit_message(view=self)
 
     @ui.button(emoji="⏭️", style=ButtonStyle.grey)
     async def skip(self, interaction: Interaction, button: ui.Button):
@@ -112,10 +112,10 @@ class Navigation(ui.View):
         if voice:
             voice.stop()
             await Play(self.bot).play_music(interaction)
-            await interaction.response().edit_message(embed=self.embed, view=None)
+            await interaction.response.edit_message(embed=self.embed, view=None)
             return
 
-        await interaction.response().edit_message(view=self)
+        await interaction.response.edit_message(view=self)
 
 
 class Play(commands.Cog):
@@ -206,14 +206,14 @@ class Play(commands.Cog):
     @staticmethod
     async def ensure_voice(interaction: Interaction) -> bool:
         if not interaction.user.voice:
-            await interaction.response().send_message(embed=Embed(title="Connect to a voice channel!"), ephemeral=True)
+            await interaction.response.send_message(embed=Embed(title="Connect to a voice channel!"), ephemeral=True)
             return False
         return True
 
     @app_commands.command(name="play", description="Play a song")
     @app_commands.check(ensure_voice)
     async def play(self, interaction: Interaction, query: str):
-        await interaction.response().defer()
+        await interaction.response.defer()
 
         track = Track(query=query, user=interaction.user, spotify=bool("spotify" in query))
 
@@ -271,7 +271,7 @@ class Play(commands.Cog):
     @app_commands.command(name="playskip", description="Skip the current song and play the given one.")
     @app_commands.check(ensure_voice)
     async def playskip(self, interaction: Interaction, query: str):
-        await interaction.response().defer()
+        await interaction.response.defer()
 
         # first we check if the song can be played, so we are not interrupting
         # if something is already playing
@@ -298,7 +298,7 @@ class Play(commands.Cog):
     @app_commands.command(name='seek', description='Seek to a specific time in the song.')
     @app_commands.check(ensure_voice)
     async def seek(self, interaction: Interaction, time: int):
-        await interaction.response().defer()
+        await interaction.response.defer()
 
         voice: VoiceClient = interaction.guild.voice_client
         user_vc = interaction.user.voice.channel
@@ -336,7 +336,7 @@ class Play(commands.Cog):
 
     @app_commands.command(name="queue", description="Displays the songs in the queue")
     async def queue(self, interaction: Interaction):
-        await interaction.response().defer()
+        await interaction.response.defer()
         embed = Embed(title="Queue", color=Worpal.color)
         songs = slist(self.bot, interaction)
         if songs:
@@ -347,7 +347,7 @@ class Play(commands.Cog):
 
     @app_commands.command(name="np", description="The song that is currently being played")
     async def np(self, interaction: Interaction):
-        await interaction.response().defer()
+        await interaction.response.defer()
         if self.bot.playing[interaction.guild.id]:
             view = Navigation(self.bot)
             announce_song(self.bot, interaction, view)

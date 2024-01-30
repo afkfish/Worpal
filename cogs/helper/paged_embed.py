@@ -24,7 +24,7 @@ class EmbedNavigator(ui.View):
             button.disabled = True
             self.page = 0
 
-        await interaction.response().edit_message(embed=self.page_provider.get_page(self.page), view=self)
+        await interaction.response.edit_message(embed=self.page_provider.get_page(self.page), view=self)
 
     @ui.button(emoji="➡️", style=ButtonStyle.grey)
     async def next(self, interaction: Interaction, button: ui.Button):
@@ -38,7 +38,7 @@ class EmbedNavigator(ui.View):
             button.disabled = True
             self.page = self.max
 
-        await interaction.response().edit_message(embed=self.page_provider.get_page(self.page), view=self)
+        await interaction.response.edit_message(embed=self.page_provider.get_page(self.page), view=self)
 
     @ui.button(emoji="❌", style=ButtonStyle.grey)
     async def delete(self, interaction: Interaction, button: ui.Button):
