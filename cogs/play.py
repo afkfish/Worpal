@@ -162,8 +162,9 @@ class Play(commands.Cog):
             announce_song(self.bot, interaction)
 
         vc.play(
-            FFmpegPCMAudio(
+            FFmpegOpusAudio(
                 source=m_url,
+                codec='copy',
                 before_options=FFMPEG_OPTIONS
             ),
             after=lambda e: self.play_interrupt_handler(interaction, e)
@@ -193,8 +194,9 @@ class Play(commands.Cog):
             announce_song(self.bot, interaction)
 
         vc.play(
-            FFmpegPCMAudio(
+            FFmpegOpusAudio(
                 source=m_url,
+                codec='copy',
                 before_options=FFMPEG_OPTIONS
             ),
             after=lambda e: self.play_interrupt_handler(interaction, e)
@@ -317,9 +319,10 @@ class Play(commands.Cog):
         voice.stop()
         # play the song with discord.FFmpegPCMaudio
         voice.play(
-            FFmpegPCMAudio(
-                before_options=f'-ss {time} -reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
-                source=m_url
+            FFmpegOpusAudio(
+                source=m_url,
+                codec='copy',
+                before_options=f'-ss {time} {FFMPEG_OPTIONS}'
             ),
             after=lambda e: self.play_interrupt_handler(interaction, e)
         )
