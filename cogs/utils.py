@@ -15,11 +15,11 @@ class Debug(commands.Cog):
 
     @app_commands.command()
     async def ping(self, interaction: Interaction):
-        await interaction.response.send_message(f"Pong! {round(self.bot.latency * 1000)}ms")
+        await interaction.response().send_message(f"Pong! {round(self.bot.latency * 1000)}ms")
 
     @app_commands.command()
     async def reload(self, interaction: Interaction):
-        await interaction.response.send_message("Reloading in 5s!")
+        await interaction.response().send_message("Reloading in 5s!")
         vc: VoiceClient = interaction.guild.voice_client
         if vc:
             await vc.disconnect(force=True)

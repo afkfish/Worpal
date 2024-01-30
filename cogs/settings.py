@@ -35,7 +35,7 @@ class Settings(commands.GroupCog, name="settings"):
 
     @app_commands.command(name="shuffle_play", description="Turns on/off shuffle playing")
     async def settings_shuffle(self, interaction: Interaction, shuffle_play: str):
-        await interaction.response.defer()
+        await interaction.response().defer()
         if shuffle_play.lower() in bool_str:
             self.bot.settings[str(interaction.guild.id)]['shuffle'] = True
         else:
@@ -44,7 +44,7 @@ class Settings(commands.GroupCog, name="settings"):
 
     @app_commands.command(name="announce_songs", description="Turns on/off announce")
     async def settings_announce(self, interaction: Interaction, announce_songs: str):
-        await interaction.response.defer()
+        await interaction.response().defer()
         if announce_songs.lower() in bool_str:
             self.bot.settings[str(interaction.guild.id)]['announce'] = True
         else:
@@ -53,7 +53,7 @@ class Settings(commands.GroupCog, name="settings"):
 
     # @app_commands.command(name="loop", description="Turns on/off loop")
     # async def settigs_loop(self, interaction: Interaction, loop: str):
-    # 	await interaction.response.defer()
+    # 	await interaction.response().defer()
     # 	if loop.lower() in bool_str:
     # 		self.bot.settings[str(interaction.guild.id)]['loop'] = True
     # 	else:

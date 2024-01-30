@@ -54,7 +54,7 @@ class Wynncraft(commands.Cog):
 
     @app_commands.command(name="wynn", description="Get a player's wynncraft info")
     async def info(self, interaction: Interaction, username: str):
-        await interaction.response.defer()
+        await interaction.response().defer()
 
         try:
             player = self.get_info(username.lower())

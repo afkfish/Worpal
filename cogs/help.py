@@ -12,7 +12,7 @@ class Help(commands.Cog):
 
     @app_commands.command(name="help", description="help info")
     async def help(self, interaction: Interaction):
-        await interaction.response.defer()
+        await interaction.response().defer()
         view = EmbedNavigator(self.bot, interaction, self, 3)
         embed = self.get_page(0)
         await interaction.followup.send(embed=embed, view=view)

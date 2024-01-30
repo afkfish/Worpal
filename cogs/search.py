@@ -56,7 +56,7 @@ class Search(commands.Cog):
 
     @app_commands.command(name="search", description="Search for a song on youtube.")
     async def search_(self, interaction: Interaction, q: str):
-        await interaction.response.defer()
+        await interaction.response().defer()
         songs = youtube_api_search(Track(query=q))
         if songs:
             view = Selector()

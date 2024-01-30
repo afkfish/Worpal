@@ -15,7 +15,7 @@ class Image(commands.Cog):
 
     @app_commands.command(name="image", description="get an image by a query")
     async def image(self, interaction: Interaction, query: str):
-        await interaction.response.defer()
+        await interaction.response().defer()
         if self.view:
             self.view.stop()
         self.query = query
