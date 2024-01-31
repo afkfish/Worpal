@@ -2,14 +2,13 @@ import datetime as dt
 import random
 import re
 
-from discord import app_commands, Interaction, ui, ButtonStyle, VoiceClient, Embed, FFmpegOpusAudio
+from discord import app_commands, Interaction, ui, ButtonStyle, VoiceClient, Embed, FFmpegOpusAudio, VoiceProtocol
 from discord.ext import commands
 
 from api.SpotifyAPI import SpotifyApi
 from api.YouTubeAPI import get_link
 from main import Worpal
-from structures.playlist import PlayList
-from structures.track import Track
+from structures.playable import Playable, Playlist, Track
 
 JSON_FORMAT = {'name': '', 'songs': []}
 FFMPEG_OPTIONS = "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
@@ -18,26 +17,26 @@ track_pattern = re.compile(r"https://open\.spotify\.com/track/[A-Za-z0-9]+\?si=[
 playlist_pattern = re.compile(r"https://open\.spotify\.com/playlist/[A-Za-z0-9]+\?si=[A-Za-z0-9]+", re.IGNORECASE)
 
 
-async def process_query(bot: Worpal, interaction: Interaction, user_vc, playlist: PlayList):
+async def process_query(bot: Worpal, interaction: Interaction, user_vc, playlist: Playlist):
     for track in playlist.tracks:
         track = await get_link(track)
         playlist.tracks.pop(0)
         if track.is_valid():
             track.channel = user_vc
-            bot.music_queue[interaction.guild.id].append(track)
+            bot.music_queue[interaction.guild_id].append(track)
 
 
 def slist(bot: Worpal, interaction: Interaction) -> str:
     li = ""
-    for track in bot.music_queue[interaction.guild.id]:
+    for track in bot.music_queue[interaction.guild_id]:
         li += track.title + "\n"
     return li
 
 
 def announce_song(bot: Worpal, interaction: Interaction, view=None) -> None:
-    track = bot.playing[interaction.guild.id]
+    track = bot.playing[interaction.guild_id]
     embed = Embed(title="Currently playing:", color=bot.color)
-    embed.set_thumbnail(url=track.thumbnail)
+    embed.set_thumbnail(url=track.image)
 
     if view:
         desc = f"{track.progress_bar()} `[{track.format_progress()}/{track.get_duration()}]`"
@@ -63,9 +62,9 @@ class Navigation(ui.View):
         voice: VoiceClient = interaction.guild.voice_client
         if voice:
             self.embed = Embed(title="Replaying 🔄", color=self.bot.color)
-            self.bot.music_queue[interaction.guild.id].insert(0, self.bot.playing[interaction.guild.id])
+            self.bot.music_queue[interaction.guild_id].insert(0, self.bot.playing[interaction.guild_id])
             voice.stop()
-            await Play(self.bot).play_music(interaction)
+            await Play(self.bot).play_audio(interaction)
             await interaction.response.edit_message(embed=self.embed, view=None)
             return
 
@@ -111,7 +110,7 @@ class Navigation(ui.View):
         voice: VoiceClient = interaction.guild.voice_client
         if voice:
             voice.stop()
-            await Play(self.bot).play_music(interaction)
+            await Play(self.bot).play_audio(interaction)
             await interaction.response.edit_message(embed=self.embed, view=None)
             return
 
@@ -123,86 +122,6 @@ class Play(commands.Cog):
     def __init__(self, bot: Worpal):
         self.bot = bot
 
-    def play_interrupt_handler(self, interaction: Interaction, error):
-        if error:
-            self.bot.logger.error(error)
-            interaction.channel.send(embed=Embed(title="There was an error while trying to play the song."))
-
-        self.play_next(interaction)
-
-    def play_next(self, interaction: Interaction):
-        # failsafe when the above code doesn't detect empty list
-        try:
-            self.bot.music_queue[interaction.guild.id][0]
-        except IndexError:
-            return
-
-        vc: VoiceClient = interaction.guild.voice_client
-        if not vc:
-            return
-
-        if vc.is_playing():
-            return
-
-        if self.bot.looping(str(interaction.guild.id)):
-            m_url = self.bot.playing[interaction.guild.id].source
-
-        elif self.bot.shuffle(str(interaction.guild.id)):
-            entry: Track = random.choice(self.bot.music_queue[interaction.guild.id])
-            m_url = entry.source
-            self.bot.playing[interaction.guild.id] = entry
-            self.bot.music_queue[interaction.guild.id].remove(entry)
-
-        else:
-            m_url = self.bot.music_queue[interaction.guild.id][0].source
-            self.bot.playing[interaction.guild.id] = self.bot.music_queue[interaction.guild.id][0]
-            self.bot.music_queue[interaction.guild.id].pop(0)
-
-        if self.bot.announce(str(interaction.guild.id)):
-            announce_song(self.bot, interaction)
-
-        vc.play(
-            FFmpegOpusAudio(
-                source=m_url,
-                codec='copy',
-                before_options=FFMPEG_OPTIONS
-            ),
-            after=lambda e: self.play_interrupt_handler(interaction, e)
-        )
-        self.bot.playing[interaction.guild.id].start = dt.datetime.utcnow()
-
-    async def play_music(self, interaction: Interaction):
-        if not self.bot.music_queue[interaction.guild.id]:
-            return
-
-        m_url = self.bot.music_queue[interaction.guild.id][0].source
-        vc: VoiceClient = interaction.guild.voice_client
-
-        if not vc:
-            vc = await self.bot.music_queue[interaction.guild.id][0].channel.connect()
-
-        elif vc.channel != self.bot.music_queue[interaction.guild.id][0].channel:
-            await vc.move_to(self.bot.music_queue[interaction.guild.id][0].channel)
-
-        if vc.is_playing():
-            return
-
-        self.bot.playing[interaction.guild.id] = self.bot.music_queue[interaction.guild.id][0]
-        self.bot.music_queue[interaction.guild.id].pop(0)
-
-        if self.bot.announce(str(interaction.guild.id)):
-            announce_song(self.bot, interaction)
-
-        vc.play(
-            FFmpegOpusAudio(
-                source=m_url,
-                codec='copy',
-                before_options=FFMPEG_OPTIONS
-            ),
-            after=lambda e: self.play_interrupt_handler(interaction, e)
-        )
-        self.bot.playing[interaction.guild.id].start = dt.datetime.utcnow()
-
     @staticmethod
     async def ensure_voice(interaction: Interaction) -> bool:
         if not interaction.user.voice:
@@ -210,48 +129,93 @@ class Play(commands.Cog):
             return False
         return True
 
-    @app_commands.command(name="play", description="Play a song")
+    def play_interrupt_handler(self, interaction: Interaction, error) -> None:
+        if error:
+            self.bot.logger.error(error)
+            interaction.channel.send(embed=Embed(title="There was an error while trying to play the song."))
+
+        self.play_audio(interaction)
+
+    async def play_audio(self, interaction: Interaction) -> None:
+        try:
+            self.bot.music_queue[interaction.guild_id][0]
+        except IndexError:
+            return
+
+        voice_client: VoiceClient | VoiceProtocol = interaction.guild.voice_client
+        if not voice_client:
+            voice_client = await self.bot.music_queue[interaction.guild_id][0].channel.connect()
+
+        elif voice_client.is_playing():
+            return
+
+        elif voice_client.channel != (channel := self.bot.music_queue[interaction.guild_id][0].channel):
+            await voice_client.move_to(channel)
+
+        if self.bot.looping(interaction.guild_id):
+            m_url = self.bot.playing[interaction.guild_id].source
+
+        elif self.bot.shuffle(interaction.guild_id):
+            entry: Track = random.choice(self.bot.music_queue[interaction.guild_id])
+            m_url = entry.source
+            self.bot.playing[interaction.guild_id] = entry
+            self.bot.music_queue[interaction.guild_id].remove(entry)
+
+        else:
+            m_url = self.bot.music_queue[interaction.guild_id][0].source
+            self.bot.playing[interaction.guild_id] = self.bot.music_queue[interaction.guild_id][0]
+            self.bot.music_queue[interaction.guild_id].pop(0)
+
+        if self.bot.announce(interaction.guild_id):
+            announce_song(self.bot, interaction)
+
+        voice_client.play(
+            FFmpegOpusAudio(
+                source=m_url,
+                codec='copy',
+                before_options=FFMPEG_OPTIONS
+            ),
+            after=lambda e: self.play_interrupt_handler(interaction, e)
+        )
+        self.bot.playing[interaction.guild_id].start = dt.datetime.now()
+
+    @app_commands.command(name="play", description="Play a song from youtube or spotify")
     @app_commands.check(ensure_voice)
     async def play(self, interaction: Interaction, query: str):
         await interaction.response.defer()
 
-        track = Track(query=query, user=interaction.user, spotify=bool("spotify" in query))
+        playable = Playable(interaction.user, spotify=("spotify" in query))
+        track: Track = Track.from_playable(playable, query)
 
         user_vc = interaction.user.voice.channel
-        playlist = None
-        if "open.spotify.com" not in query:
-            track = await get_link(track)
-            if not track.is_valid():
-                await interaction.followup.send(content="Couldn't play the song.", ephemeral=True)
-                return
-
-            track.channel = user_vc
-            self.bot.music_queue[interaction.guild.id].append(track)
-            await interaction.followup.send(embed=track.get_embed())
-            await self.play_music(interaction)
-            return
-
-        elif track_pattern.match(query):
+        if track_pattern.match(query):
             # https://open.spotify.com/track/5oKRyAx215xIycigG6NNwt?si=834b843759b84497
             # https://open.spotify.com/track/2Oz3Tj8RbLBZFW5Adsyzyj?si=ae09611876c44d65
             try:
                 track_id = re.search(r"track/(.+?)\?si", query).group(1)
                 track.id = track_id
-                track = SpotifyApi().get_by_id(track=track)
+                resolved: Track = SpotifyApi().resolve(track)
+
             except AttributeError:
                 interaction.followup.send(embed=Embed(title="Error in getting song from spotify!"))
                 return
 
+            track: Track = resolved
+
         elif playlist_pattern.match(query):
             try:
                 playlist_id = re.search(r"playlist/(.+?)\?si", query).group(1)
-                playlist = SpotifyApi().get_playlist(playlist_id=playlist_id, user=interaction.user)
+                playlist = Playlist.from_playable(playable)
+                playlist.id = playlist_id
+                resolved: Playlist = SpotifyApi().resolve(playlist)
+
+                await process_query(self.bot, interaction, user_vc, resolved)
+
             except AttributeError:
                 interaction.followup.send(embed=Embed(title="Error in getting playlist from spotify!"))
                 return
 
-            interaction.followup.send(embed=playlist.get_embed())
-            track = playlist.tracks.pop(0)
+            track: Track = resolved.get_first_track()
 
         track = await get_link(track)
         if not track.is_valid():
@@ -260,13 +224,12 @@ class Play(commands.Cog):
 
         if track.spotify:
             track.title += " " + str(self.bot.get_emoji(944554099175727124))
-        track.channel = user_vc
-        self.bot.music_queue[interaction.guild.id].append(track)
-        await interaction.followup.send(embed=playlist.get_embed() if playlist else track.get_embed())
-        await self.play_music(interaction)
 
-        if playlist:
-            await process_query(self.bot, interaction, user_vc, playlist)
+        track.channel = user_vc
+        self.bot.music_queue[interaction.guild_id].append(track)
+
+        await interaction.followup.send(embed=track.get_embed())
+        await self.play_audio(interaction)
 
     @app_commands.command(name="playskip", description="Skip the current song and play the given one.")
     @app_commands.check(ensure_voice)
@@ -275,7 +238,7 @@ class Play(commands.Cog):
 
         # first we check if the song can be played, so we are not interrupting
         # if something is already playing
-        track = Track(query=query, user=interaction.user)
+        track = Track(query, interaction.user)
         track = await get_link(track)
 
         if not track.is_valid():
@@ -291,9 +254,9 @@ class Play(commands.Cog):
         else:
             voice.stop()
 
-        self.bot.music_queue[interaction.guild.id].insert(0, track)
+        self.bot.music_queue[interaction.guild_id].insert(0, track)
         await interaction.followup.send(embed=track.get_embed())
-        await self.play_music(interaction)
+        await self.play_audio(interaction)
 
     @app_commands.command(name='seek', description='Seek to a specific time in the song.')
     @app_commands.check(ensure_voice)
@@ -303,11 +266,11 @@ class Play(commands.Cog):
         voice: VoiceClient = interaction.guild.voice_client
         user_vc = interaction.user.voice.channel
 
-        if self.bot.playing[interaction.guild.id]:
+        if self.bot.playing[interaction.guild_id]:
             await interaction.followup.send(content='You need to play a song before you can seek in it.')
             return
 
-        m_url = self.bot.playing[interaction.guild.id].source
+        m_url = self.bot.playing[interaction.guild_id].source
 
         if not voice:
             voice = await user_vc.connect()
@@ -317,7 +280,7 @@ class Play(commands.Cog):
 
         formatted_time = dt.timedelta(seconds=int(time))
         voice.stop()
-        # play the song with discord.FFmpegPCMaudio
+        # play the song with discord.FFmpegOpusAudio
         voice.play(
             FFmpegOpusAudio(
                 source=m_url,
@@ -326,11 +289,11 @@ class Play(commands.Cog):
             ),
             after=lambda e: self.play_interrupt_handler(interaction, e)
         )
-        self.bot.playing[interaction.guild.id].start = dt.datetime.utcnow() - dt.timedelta(seconds=int(time))
+        self.bot.playing[interaction.guild_id].start = dt.datetime.utcnow() - dt.timedelta(seconds=int(time))
         # send a message saying the bot is now playing the song
         await interaction.followup.send(
             embed=Embed(
-                title=f'Now playing {self.bot.playing[interaction.guild.id].title} from {formatted_time} seconds.'
+                title=f'Now playing {self.bot.playing[interaction.guild_id].title} from {formatted_time} seconds.'
             )
         )
 
@@ -348,7 +311,7 @@ class Play(commands.Cog):
     @app_commands.command(name="np", description="The song that is currently being played")
     async def np(self, interaction: Interaction):
         await interaction.response.defer()
-        if self.bot.playing[interaction.guild.id]:
+        if self.bot.playing[interaction.guild_id]:
             view = Navigation(self.bot)
             announce_song(self.bot, interaction, view)
             await view.wait()

@@ -5,11 +5,11 @@ import os
 import uuid
 
 import discord
-from discord import Guild, VoiceClient, Member, VoiceState
+from discord import Guild, VoiceClient, Member, VoiceState, VoiceProtocol
 from discord.ext import commands
 from dotenv_vault import load_dotenv
 
-from structures.track import Track
+from structures.playable import Track
 
 
 class Worpal(commands.Bot):
@@ -25,7 +25,7 @@ class Worpal(commands.Bot):
         self.remove_command('help')
         self.logger = logging.getLogger('Worpal')
         self.logger.setLevel(logging.INFO)
-        self.music_queue: dict[int, [Track]] = {}
+        self.music_queue: dict[int, list[Track]] = {}
         self.playing: dict[int, Track | None] = {}
         self.minecraft_uuid_cache: dict[str, uuid.UUID] = {}
         self.settings = {}
@@ -74,7 +74,7 @@ class Worpal(commands.Bot):
 
     async def on_voice_state_update(self, member: Member, before: VoiceState, after: VoiceState):
         if before.channel:
-            voice: VoiceClient = before.channel.guild.voice_client
+            voice: VoiceClient | VoiceProtocol = before.channel.guild.voice_client
             if voice and not after.channel:
                 if before.channel.id == voice.channel.id:
                     if len(voice.channel.members) == 1:
@@ -82,14 +82,14 @@ class Worpal(commands.Bot):
                         voice.stop()
                         await voice.disconnect(force=True)
 
-    def shuffle(self, guildid) -> bool:
-        return self.settings[str(guildid)]["shuffle"]
+    def shuffle(self, guild_id: int) -> bool:
+        return self.settings[str(guild_id)]["shuffle"]
 
-    def announce(self, guildid) -> bool:
-        return self.settings[str(guildid)]['announce']
+    def announce(self, guild_id: int) -> bool:
+        return self.settings[str(guild_id)]['announce']
 
-    def looping(self, guildid) -> bool:
-        return self.settings[str(guildid)]['loop']
+    def looping(self, guild_id: int) -> bool:
+        return self.settings[str(guild_id)]['loop']
 
     def __del__(self):
         self.logger.info("Writing settings to file...")

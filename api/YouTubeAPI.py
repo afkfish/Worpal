@@ -9,7 +9,7 @@ import youtube_dl
 from requests import post, exceptions
 from youtube_dl import YoutubeDL
 
-from structures.track import Track
+from structures.playable import Track
 
 YDL_OPTIONS = {"format": "bestaudio/best", "noplaylist": True, "quiet": True}
 logger = logging.getLogger("YouTubeAPI")
@@ -115,7 +115,7 @@ async def youtube_api_search(track: Track) -> Track:
                       'opus' in stream['mimeType'] and 'AUDIO_QUALITY_MEDIUM' == stream['audioQuality']]
         track.title = json_data['videoDetails']['title']
         track.source = audio_only[0]['url']
-        track.thumbnail = json_data['videoDetails']['thumbnail']['thumbnails'][-1]['url']
+        track.image = json_data['videoDetails']['thumbnail']['thumbnails'][-1]['url']
         logger.info("Duration: " + audio_only[0]['approxDurationMs'])
         track.duration = dt.timedelta(milliseconds=int(audio_only[0]['approxDurationMs'])).seconds
         return track

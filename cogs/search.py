@@ -6,7 +6,7 @@ from discord.ext import commands
 from api.YouTubeAPI import youtube_api_search
 from cogs.play import Play
 from main import Worpal
-from structures.track import Track
+from structures.playable import Track
 
 
 class Selector(ui.View):
@@ -57,7 +57,7 @@ class Search(commands.Cog):
     @app_commands.command(name="search", description="Search for a song on youtube.")
     async def search_(self, interaction: Interaction, q: str):
         await interaction.response.defer()
-        songs = youtube_api_search(Track(query=q))
+        songs = await youtube_api_search(Track(q, interaction.user))
         if songs:
             view = Selector()
             embed = Embed(title=f"Search results for {q}", color=0x152875)
