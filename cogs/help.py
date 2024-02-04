@@ -1,5 +1,6 @@
 from discord import Interaction, Embed, app_commands, ui, ButtonStyle, InteractionMessage
 from discord.ext import commands
+from discord.utils import MISSING
 
 from cogs.helper.paged_embed import EmbedNavigator
 from main import Worpal
@@ -18,7 +19,7 @@ class Help(commands.Cog):
         await interaction.followup.send(embed=embed, view=view)
         await view.wait()
         embed = self.get_page(view.page)
-        await interaction.edit_original_response(embed=embed, view=None)
+        await interaction.edit_original_response(embed=embed, view=MISSING)
 
     @staticmethod
     def get_page(n: int) -> Embed:
