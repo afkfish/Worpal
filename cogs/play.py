@@ -134,7 +134,7 @@ class Play(commands.Cog):
             self.bot.logger.error(error)
             interaction.channel.send(embed=Embed(title="There was an error while trying to play the song."))
 
-        self.play_audio(interaction)
+        self.bot.loop.create_task(self.play_audio(interaction))
 
     async def play_audio(self, interaction: Interaction) -> None:
         try:
