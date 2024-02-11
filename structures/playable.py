@@ -51,7 +51,6 @@ class Track(Playable):
     def get_embed(self) -> Embed:
         embed = Embed(color=0x152875, title=self.title)
         embed.set_thumbnail(url=self.image)
-        print(self)
         if len(self.artists) > 0:
             embed.add_field(name="Artists", value=", ".join(self.artists))
         embed.set_footer(text=f"Requested by: {self.user.name}")

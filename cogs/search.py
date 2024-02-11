@@ -74,16 +74,16 @@ class Search(commands.Cog):
             if interaction.user.voice:
                 voice_channel = interaction.user.voice.channel
                 if view.value is not None:
-                    self.bot.music_queue[interaction.guild.id].append([cropped[view.value - 1], voice_channel])
+                    self.bot.music_queue[interaction.guild_id].append([cropped[view.value - 1], voice_channel])
                     embed = Embed(title="Song added from search", color=0x152875)
-                    embed.set_thumbnail(url=self.bot.music_queue[interaction.guild.id][-1][0]['thumbnail'])
-                    embed.add_field(name=self.bot.music_queue[interaction.guild.id][-1][0]['title'],
+                    embed.set_thumbnail(url=self.bot.music_queue[interaction.guild_id][-1][0]['thumbnail'])
+                    embed.add_field(name=self.bot.music_queue[interaction.guild_id][-1][0]['title'],
                                     value=str(dt.timedelta(
-                                        seconds=int(self.bot.music_queue[interaction.guild.id][-1][0]['duration']))),
+                                        seconds=int(self.bot.music_queue[interaction.guild_id][-1][0]['duration']))),
                                     inline=True)
                     embed.set_footer(text="Song requested by: " + interaction.user.name)
                     await interaction.followup.send(embed=embed)
-                    await Play(self.bot).play_music(interaction)
+                    await Play(self.bot).play_audio(interaction)
 
             else:
                 await interaction.followup.send(content="Connect to a voice channel!", ephemeral=True)

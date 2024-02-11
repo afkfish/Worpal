@@ -103,7 +103,7 @@ async def youtube_api_search(track: Track) -> Track:
     try:
         res = post(magic_url, headers=headers, params={"key": embed_key}, json=payload_data)
         json_data = res.json()
-        if res.status_code != 200:
+        if not res.ok:
             logger.error(f"YouTube API error: {res.status_code}")
             return track
     except exceptions.RequestException:
@@ -125,11 +125,12 @@ async def youtube_api_search(track: Track) -> Track:
 
 
 async def get_link(track: Track) -> Track:
-    result = urlparse(track.query)
-    if all([result.scheme, result.netloc]):
-        logger.info("YouTube link detected")
-        return await youtube_api_search(track)
-    else:
-        logger.info("YouTube search detected")
-        youtube_track = await youtube_search(track)
-        return await youtube_api_search(youtube_track)
+    return await youtubedl_search(track)
+    # result = urlparse(track.query)
+    # if all([result.scheme, result.netloc]):
+    #     logger.info("YouTube link detected")
+    #     return await youtube_api_search(track)
+    # else:
+    #     logger.info("YouTube search detected")
+    #     youtube_track = await youtube_search(track)
+    #     return await youtube_api_search(youtube_track)

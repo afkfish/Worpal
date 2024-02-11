@@ -4,6 +4,7 @@ import re
 
 from discord import app_commands, Interaction, ui, ButtonStyle, VoiceClient, Embed, FFmpegOpusAudio, VoiceProtocol
 from discord.ext import commands
+from discord.utils import MISSING
 
 from api.SpotifyAPI import SpotifyApi
 from api.YouTubeAPI import get_link
@@ -33,17 +34,15 @@ def slist(bot: Worpal, interaction: Interaction) -> str:
     return li
 
 
-def announce_song(bot: Worpal, interaction: Interaction, view=None) -> None:
+def announce_song(bot: Worpal, interaction: Interaction, view=MISSING) -> None:
     track = bot.playing[interaction.guild_id]
     embed = Embed(title="Currently playing:", color=bot.color)
     embed.set_thumbnail(url=track.image)
 
-    if view:
-        desc = f"{track.progress_bar()} `[{track.format_progress()}/{track.get_duration()}]`"
-        embed.add_field(name=track.title, value=desc, inline=False)
-        bot.loop.create_task(interaction.followup.send(embed=embed, view=view))
-    else:
-        bot.loop.create_task(interaction.followup.send(embed=embed))
+    # Check if valid
+    desc = f"{track.progress_bar()} `[{track.format_progress()}/{track.get_duration()}]`"
+    embed.add_field(name=track.title, value=desc, inline=False)
+    bot.loop.create_task(interaction.followup.send(embed=embed, view=view))
 
 
 class Navigation(ui.View):
@@ -59,7 +58,7 @@ class Navigation(ui.View):
             child.disabled = False
         button.disabled = True
         button.style = ButtonStyle.green
-        voice: VoiceClient = interaction.guild.voice_client
+        voice: VoiceClient | VoiceProtocol = interaction.guild.voice_client
         if voice:
             self.embed = Embed(title="Replaying 🔄", color=self.bot.color)
             self.bot.music_queue[interaction.guild_id].insert(0, self.bot.playing[interaction.guild_id])
@@ -76,7 +75,7 @@ class Navigation(ui.View):
             child.disabled = False
         button.disabled = True
         button.style = ButtonStyle.green
-        voice: VoiceClient = interaction.guild.voice_client
+        voice: VoiceClient | VoiceProtocol = interaction.guild.voice_client
         if voice and voice.is_paused():
             self.embed = Embed(title="Resumed ▶️", color=self.bot.color)
             voice.resume()
@@ -91,7 +90,7 @@ class Navigation(ui.View):
             child.disabled = False
         button.disabled = True
         button.style = ButtonStyle.green
-        voice: VoiceClient = interaction.guild.voice_client
+        voice: VoiceClient | VoiceProtocol = interaction.guild.voice_client
         if voice and voice.is_playing():
             self.embed = Embed(title="Paused ⏸️", color=self.bot.color)
             voice.pause()
@@ -107,7 +106,7 @@ class Navigation(ui.View):
         for child in self.children:
             child.disabled = True
         button.style = ButtonStyle.green
-        voice: VoiceClient = interaction.guild.voice_client
+        voice: VoiceClient | VoiceProtocol = interaction.guild.voice_client
         if voice:
             voice.stop()
             await Play(self.bot).play_audio(interaction)
@@ -247,7 +246,7 @@ class Play(commands.Cog):
 
         # we check wether the bot is connected and stop playing,
         # if not, connect to user
-        voice: VoiceClient = interaction.guild.voice_client
+        voice: VoiceClient | VoiceProtocol = interaction.guild.voice_client
         user_vc = interaction.user.voice.channel
         if not voice:
             await user_vc.connect()
@@ -263,25 +262,25 @@ class Play(commands.Cog):
     async def seek(self, interaction: Interaction, time: int):
         await interaction.response.defer()
 
-        voice: VoiceClient = interaction.guild.voice_client
+        voice_client: VoiceClient | VoiceProtocol = interaction.guild.voice_client
         user_vc = interaction.user.voice.channel
 
-        if self.bot.playing[interaction.guild_id]:
+        if not self.bot.playing[interaction.guild_id]:
             await interaction.followup.send(content='You need to play a song before you can seek in it.')
             return
 
         m_url = self.bot.playing[interaction.guild_id].source
 
-        if not voice:
-            voice = await user_vc.connect()
+        if not voice_client:
+            voice_client = await user_vc.connect()
 
-        elif voice.channel != user_vc:
-            await voice.move_to(user_vc)
+        elif voice_client.channel != user_vc:
+            await voice_client.move_to(user_vc)
 
         formatted_time = dt.timedelta(seconds=int(time))
-        voice.stop()
+        voice_client.stop()
         # play the song with discord.FFmpegOpusAudio
-        voice.play(
+        voice_client.play(
             FFmpegOpusAudio(
                 source=m_url,
                 codec='copy',

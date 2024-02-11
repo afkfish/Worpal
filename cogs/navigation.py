@@ -1,4 +1,4 @@
-from discord import app_commands, Interaction, VoiceClient, Embed, User
+from discord import app_commands, Interaction, VoiceClient, Embed, User, VoiceProtocol
 from discord.ext import commands
 
 from cogs.play import slist, Play
@@ -44,10 +44,10 @@ class Navigation(commands.Cog):
 
     async def skip(self, interaction: Interaction, user: User = None) -> None:
         await interaction.response.defer()
-        voice: VoiceClient = interaction.guild.voice_client
+        voice: VoiceClient | VoiceProtocol = interaction.guild.voice_client
         if voice:
             voice.stop()
-            await Play(self.bot).play_music(interaction)
+            await Play(self.bot).play_audio(interaction)
             await interaction.followup.send(embed=Embed(title="Skipped :next_track:", color=Worpal.color))
             return
 
@@ -59,7 +59,7 @@ class Navigation(commands.Cog):
 
     async def pause(self, interaction: Interaction, user: User = None) -> None:
         await interaction.response.defer()
-        voice: VoiceClient = interaction.guild.voice_client
+        voice: VoiceClient | VoiceProtocol = interaction.guild.voice_client
         if voice and voice.is_playing():
             voice.pause()
             await interaction.followup.send(embed=Embed(title="Paused :pause_button:", color=Worpal.color))
@@ -73,7 +73,7 @@ class Navigation(commands.Cog):
 
     async def resume(self, interaction: Interaction, user: User = None) -> None:
         await interaction.response.defer()
-        voice: VoiceClient = interaction.guild.voice_client
+        voice: VoiceClient | VoiceProtocol = interaction.guild.voice_client
         if voice and voice.is_paused():
             voice.resume()
             await interaction.followup.send(embed=Embed(title="Resumed :arrow_forward:", color=Worpal.color))
@@ -87,10 +87,10 @@ class Navigation(commands.Cog):
 
     async def stop(self, interaction: Interaction, user: User = None) -> None:
         await interaction.response.defer()
-        voice: VoiceClient = interaction.guild.voice_client
+        voice: VoiceClient | VoiceProtocol = interaction.guild.voice_client
         if voice:
             voice.stop()
-            self.bot.music_queue[interaction.guild.id] = []
+            self.bot.music_queue[interaction.guild_id] = []
             await interaction.followup.send(embed=Embed(title="Stopped :stop_button:", color=Worpal.color))
             return
 
@@ -102,11 +102,11 @@ class Navigation(commands.Cog):
 
     async def sutup(self, interaction: Interaction, user: User = None) -> None:
         await interaction.response.defer(ephemeral=True)
-        voice: VoiceClient = interaction.guild.voice_client
+        voice: VoiceClient | VoiceProtocol = interaction.guild.voice_client
         if voice:
             await voice.disconnect()
-            self.bot.playing[interaction.guild.id] = None
-            self.bot.music_queue[interaction.guild.id] = []
+            self.bot.playing[interaction.guild_id] = None
+            self.bot.music_queue[interaction.guild_id] = []
             await interaction.followup.send(embed=Embed(title="Okay okay, chill bro!", color=Worpal.color))
             return
 
@@ -117,24 +117,21 @@ class Navigation(commands.Cog):
     @clear.command(name="duplicates", description="Clear duplicated songs from queue.")
     async def clear_dup(self, interaction: Interaction) -> None:
         await interaction.response.defer()
-        if self.bot.music_queue[interaction.guild.id]:
-            res = list(dict.fromkeys(self.bot.music_queue[interaction.guild.id]))
-            self.bot.music_queue[interaction.guild.id] = res
+        if self.bot.music_queue[interaction.guild_id]:
+            res = list(dict.fromkeys(self.bot.music_queue[interaction.guild_id]))
+            self.bot.music_queue[interaction.guild_id] = res
 
         embed = Embed(title="Duplicated songs cleared! :broom:", color=Worpal.color)
         songs = slist(self.bot, interaction)
 
-        if songs:
-            embed.add_field(name="Songs: ", value=songs, inline=True)
-        else:
-            embed.add_field(name="Songs: ", value="No music in queue", inline=True)
+        embed.add_field(name="Songs: ", value=songs if songs else "No music in queue", inline=True)
         await interaction.followup.send(embed=embed)
 
     @clear.command(name="all", description="Clear all songs from queue.")
     async def clear_all(self, interaction: Interaction) -> None:
         await interaction.response.defer()
-        if self.bot.music_queue[interaction.guild.id]:
-            self.bot.music_queue[interaction.guild.id] = []
+        if self.bot.music_queue[interaction.guild_id]:
+            self.bot.music_queue[interaction.guild_id] = []
 
         await interaction.followup.send(embed=Embed(title="Queue cleared! :broom:", color=Worpal.color))
 

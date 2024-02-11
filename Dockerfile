@@ -12,7 +12,6 @@ FROM base AS pipenv
 # Install pipenv and compilation dependencies
 RUN pip install pipenv
 RUN apt update
-RUN apt install -y git
 
 # Install python dependencies in /.venv
 COPY Pipfile .
