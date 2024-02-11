@@ -34,7 +34,7 @@ async def youtubedl_search(track: Track) -> Track:
     logger.info("YoutubeDL result: %s", info['title'])
     track.title = info['title']
     track.source = info['formats'][0]['url']
-    track.thumbnail = info['thumbnail']
+    track.image = info['thumbnail']
     track.duration = info['duration']
     return track
 
