@@ -22,7 +22,7 @@ async def process_query(bot: Worpal, interaction: Interaction, user_vc, playlist
     for track in playlist.tracks:
         track = await get_link(track)
         playlist.tracks.pop(0)
-        if track.is_valid():
+        if track:
             track.channel = user_vc
             bot.music_queue[interaction.guild_id].append(track)
 
@@ -188,44 +188,27 @@ class Play(commands.Cog):
 
         user_vc = interaction.user.voice.channel
         if track_pattern.match(query):
-            # https://open.spotify.com/track/5oKRyAx215xIycigG6NNwt?si=834b843759b84497
-            # https://open.spotify.com/track/2Oz3Tj8RbLBZFW5Adsyzyj?si=ae09611876c44d65
-            try:
-                track_id = re.search(r"track/(.+?)\?si", query).group(1)
-                track.id = track_id
-                resolved: Track = SpotifyApi().resolve(track)
-
-            except AttributeError:
-                interaction.followup.send(embed=Embed(title="Error in getting song from spotify!"))
-                return
-
-            track: Track = resolved
+            track.id = re.search(r"track/(.+?)\?si", query).group(1)
+            track = SpotifyApi().resolve(track)
 
         elif playlist_pattern.match(query):
-            try:
-                playlist_id = re.search(r"playlist/(.+?)\?si", query).group(1)
-                playlist = Playlist.from_playable(playable)
-                playlist.id = playlist_id
-                resolved: Playlist = SpotifyApi().resolve(playlist)
+            playlist = Playlist.from_playable(playable)
+            playlist.id = re.search(r"playlist/(.+?)\?si", query).group(1)
+            resolved: Playlist = SpotifyApi().resolve(playlist)
 
-                await process_query(self.bot, interaction, user_vc, resolved)
-
-            except AttributeError:
-                interaction.followup.send(embed=Embed(title="Error in getting playlist from spotify!"))
-                return
-
+            await process_query(self.bot, interaction, user_vc, resolved)
             track: Track = resolved.get_first_track()
 
         track = await get_link(track)
-        if not track.is_valid():
+        if not track:
             await interaction.followup.send(content="Couldn't play the song.", ephemeral=True)
             return
 
-        if track.spotify:
-            track.title += " " + str(self.bot.get_emoji(944554099175727124))
-
         track.channel = user_vc
         self.bot.music_queue[interaction.guild_id].append(track)
+
+        if track.spotify:
+            track.title += " " + str(self.bot.get_emoji(944554099175727124))
 
         await interaction.followup.send(embed=track.get_embed())
         await self.play_audio(interaction)
@@ -240,7 +223,7 @@ class Play(commands.Cog):
         track = Track(query, interaction.user)
         track = await get_link(track)
 
-        if not track.is_valid():
+        if not track:
             await interaction.followup.send(content="Couldn't play the song.", ephemeral=True)
             return
 

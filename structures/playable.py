@@ -16,6 +16,10 @@ class Playable:
     title: str = ""
     image: str = None
     spotify: bool = False
+    valid: bool = True
+
+    def __bool__(self):
+        return self.valid
 
     def get_embed(self) -> Embed:
         pass
@@ -36,6 +40,10 @@ class Track(Playable):
     def __init__(self, query: str, user: User):
         self.query = query
         self.user = user
+
+    @override
+    def __bool__(self):
+        return self.is_valid()
 
     @classmethod
     def from_playable(cls, playable: Playable, query: str):
@@ -62,7 +70,7 @@ class Track(Playable):
         return self
 
     def is_valid(self) -> bool:
-        return bool(self.title and self.source)
+        return bool(self.title and self.source and self.valid)
 
     def get_position(self) -> timedelta:
         return dt.datetime.now() - self.start
