@@ -39,4 +39,4 @@ USER app
 # Install application into container
 COPY . .
 
-ENTRYPOINT ["python3", "main.py"]
+ENTRYPOINT ["python3", "-O", "main.py"]
