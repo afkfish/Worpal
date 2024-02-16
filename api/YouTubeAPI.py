@@ -14,7 +14,7 @@ async def youtubedl_search(track: Track) -> Track:
     with YoutubeDL(YDL_OPTIONS) as ydl:
         try:
             info = ydl.extract_info(track.query if urlparse(track.query).scheme else f"ytsearch:{track.query}", download=False)
-            if 'entry' in info:
+            if 'entries' in info:
                 info = info['entries'][0]
 
         except youtube_dl.utils.DownloadError:
@@ -24,13 +24,13 @@ async def youtubedl_search(track: Track) -> Track:
         logger.info("YoutubeDL result: %s", info['title'])
         track.title = info['title']
         track.source = info['formats'][0]['url']
-        track.thumbnail = info['thumbnail']
+        track.image = info['thumbnail']
         track.duration = info['duration']
         return track
 
 
 async def get_link(track: Track) -> Track:
-    if not track:
+    if not track.query:
         return track
     return await youtubedl_search(track)
     # result = urlparse(track.query)
