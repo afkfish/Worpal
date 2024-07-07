@@ -28,10 +28,7 @@ async def process_query(bot: Worpal, interaction: Interaction, user_vc, playlist
 
 
 def slist(bot: Worpal, interaction: Interaction) -> str:
-    li = ""
-    for track in bot.music_queue[interaction.guild_id]:
-        li += track.title + "\n"
-    return li
+    return "\n".join(track.title for track in bot.music_queue[interaction.guild_id])
 
 
 def announce_song(bot: Worpal, interaction: Interaction, view=MISSING) -> None:
@@ -174,7 +171,8 @@ class Play(commands.Cog):
                 codec='copy',
                 before_options=FFMPEG_OPTIONS
             ),
-            after=lambda e: self.play_interrupt_handler(interaction, e)
+            after=lambda e: self.play_interrupt_handler(interaction, e),
+            signal_type="music"
         )
         self.bot.playing[interaction.guild_id].start = dt.datetime.now()
 
