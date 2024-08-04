@@ -14,4 +14,4 @@ requests = "*"
 #schedule = "*"
 youtube-dl = {editable = true, ref = "master", git = "https://github.com/ytdl-org/youtube-dl.git"}
 python-dotenv-vault = "*"
-discord = {py = { extras = ['speed'], version = ">=2.3" }}
+"discord.py" = {version = ">=2.4", extras = ["voice"]}
