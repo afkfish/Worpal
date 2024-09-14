@@ -14,32 +14,11 @@ from structures.playable import Playable, Playlist, Track
 JSON_FORMAT = {'name': '', 'songs': []}
 FFMPEG_OPTIONS = "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
 
-track_pattern = re.compile(r"https://open\.spotify\.com/track/[A-Za-z0-9]+\?si=[A-Za-z0-9]+", re.IGNORECASE)
-playlist_pattern = re.compile(r"https://open\.spotify\.com/playlist/[A-Za-z0-9]+\?si=[A-Za-z0-9]+", re.IGNORECASE)
-
-
-async def process_query(bot: Worpal, interaction: Interaction, user_vc, playlist: Playlist):
-    for track in playlist.tracks:
-        track = await get_link(track)
-        playlist.tracks.pop(0)
-        if track:
-            track.channel = user_vc
-            bot.music_queue[interaction.guild_id].append(track)
-
+TRACK_PATTERN = re.compile(r"https://open\.spotify\.com/track/[A-Za-z0-9]+\?si=[A-Za-z0-9]+", re.IGNORECASE)
+PLAYLIST_PATTERN = re.compile(r"https://open\.spotify\.com/playlist/[A-Za-z0-9]+\?si=[A-Za-z0-9]+", re.IGNORECASE)
 
 def slist(bot: Worpal, interaction: Interaction) -> str:
     return "\n".join(track.title for track in bot.music_queue[interaction.guild_id])
-
-
-def announce_song(bot: Worpal, interaction: Interaction, view=MISSING) -> None:
-    track = bot.playing[interaction.guild_id]
-    embed = Embed(title="Currently playing:", color=bot.color)
-    embed.set_thumbnail(url=track.image)
-
-    # Check if valid
-    desc = f"{track.progress_bar()} `[{track.format_progress()}/{track.get_duration()}]`"
-    embed.add_field(name=track.title, value=desc, inline=False)
-    bot.loop.create_task(interaction.followup.send(embed=embed, view=view))
 
 
 class Navigation(ui.View):
@@ -120,10 +99,13 @@ class Play(commands.Cog):
 
     @staticmethod
     async def ensure_voice(interaction: Interaction) -> bool:
-        if not interaction.user.voice:
-            await interaction.response.send_message(embed=Embed(title="Connect to a voice channel!"), ephemeral=True)
-            return False
-        return True
+        if interaction.user.voice:
+            return True
+        await interaction.response.send_message(
+            embed=Embed(title="Connect to a voice channel!"),
+            ephemeral=True
+        )
+        return False
 
     def play_interrupt_handler(self, interaction: Interaction, error) -> None:
         if error:
@@ -132,70 +114,80 @@ class Play(commands.Cog):
 
         self.bot.loop.create_task(self.play_audio(interaction))
 
+    async def process_playlist(self, interaction: Interaction, user_vc, playlist: Playlist):
+        for track in playlist.tracks:
+            track = await get_link(track)
+            playlist.tracks.pop(0)
+            if track:
+                track.channel = user_vc
+                self.bot.music_queue[interaction.guild_id].append(track)
+
+    async def announce_song(self, interaction: Interaction, view=MISSING) -> None:
+        track = self.bot.playing[interaction.guild_id]
+        embed = Embed(title="Currently playing:", color=self.bot.color)
+        embed.set_thumbnail(url=track.image)
+
+        # Check if valid
+        desc = f"{track.progress_bar()} `[{track.format_progress()}/{track.get_duration()}]`"
+        embed.add_field(name=track.title, value=desc, inline=False)
+        await interaction.followup.send(embed=embed, view=view)
+
     async def play_audio(self, interaction: Interaction) -> None:
-        try:
-            self.bot.music_queue[interaction.guild_id][0]
-        except IndexError:
+        guild_id = interaction.guild_id
+        queue = self.bot.music_queue.get(guild_id, [])
+
+        if not queue:
             return
 
-        voice_client: VoiceClient | VoiceProtocol = interaction.guild.voice_client
-        if not voice_client:
-            voice_client = await self.bot.music_queue[interaction.guild_id][0].channel.connect()
-
-        elif voice_client.is_playing():
+        voice_client = interaction.guild.voice_client or await queue[0].channel.connect()
+        if voice_client.is_playing():
             return
 
-        elif voice_client.channel != (channel := self.bot.music_queue[interaction.guild_id][0].channel):
-            await voice_client.move_to(channel)
+        if voice_client.channel != queue[0].channel:
+            await voice_client.move_to(queue[0].channel)
 
-        if self.bot.looping(interaction.guild_id):
-            m_url = self.bot.playing[interaction.guild_id].source
-
-        elif self.bot.shuffle(interaction.guild_id):
-            entry: Track = random.choice(self.bot.music_queue[interaction.guild_id])
-            m_url = entry.source
-            self.bot.playing[interaction.guild_id] = entry
-            self.bot.music_queue[interaction.guild_id].remove(entry)
-
+        if self.bot.looping(guild_id):
+            track = self.bot.playing[guild_id]
+        elif self.bot.shuffle(guild_id):
+            track = random.choice(queue)
+            queue.remove(track)
         else:
-            m_url = self.bot.music_queue[interaction.guild_id][0].source
-            self.bot.playing[interaction.guild_id] = self.bot.music_queue[interaction.guild_id][0]
-            self.bot.music_queue[interaction.guild_id].pop(0)
+            track = queue.pop(0)
 
-        if self.bot.announce(interaction.guild_id):
-            announce_song(self.bot, interaction)
+        self.bot.playing[guild_id] = track
+
+        if self.bot.announce(guild_id):
+            await self.announce_song(interaction)
 
         voice_client.play(
-            FFmpegOpusAudio(
-                source=m_url,
-                codec='copy',
-                before_options=FFMPEG_OPTIONS
-            ),
-            after=lambda e: self.play_interrupt_handler(interaction, e),
-            signal_type="music"
+            FFmpegOpusAudio(source=track.source, codec='copy', before_options=FFMPEG_OPTIONS),
+            after=lambda e: self.play_interrupt_handler(interaction, e)
         )
-        self.bot.playing[interaction.guild_id].start = dt.datetime.now()
+        track.start = dt.datetime.now()
 
     @app_commands.command(name="play", description="Play a song from youtube or spotify")
     @app_commands.check(ensure_voice)
     async def play(self, interaction: Interaction, query: str):
         await interaction.response.defer()
 
-        playable = Playable(interaction.user, spotify=("spotify" in query))
-        track: Track = Track.from_playable(playable, query)
-
+        is_spotify = "spotify" in query
+        playable = Playable(interaction.user, spotify=is_spotify)
         user_vc = interaction.user.voice.channel
-        if track_pattern.match(query):
-            track.id = re.search(r"track/(.+?)\?si", query).group(1)
+
+
+        if match := TRACK_PATTERN.search(query):
+            track = Track.from_playable(playable, query)
+            track.id = match.group(1)
             track = SpotifyApi().resolve(track)
-
-        elif playlist_pattern.match(query):
+        elif match := PLAYLIST_PATTERN.search(query):
             playlist = Playlist.from_playable(playable)
-            playlist.id = re.search(r"playlist/(.+?)\?si", query).group(1)
-            resolved: Playlist = SpotifyApi().resolve(playlist)
+            playlist.id = match.group(1)
+            resolved = SpotifyApi().resolve(playlist)
+            await self.process_playlist(interaction, user_vc, resolved)
+            track = resolved.get_first_track()
+        else:
+            track = Track.from_playable(playable, query)
 
-            await process_query(self.bot, interaction, user_vc, resolved)
-            track: Track = resolved.get_first_track()
 
         track = await get_link(track)
         if not track:
@@ -203,10 +195,10 @@ class Play(commands.Cog):
             return
 
         track.channel = user_vc
-        self.bot.music_queue[interaction.guild_id].append(track)
+        self.bot.music_queue.setdefault(interaction.guild_id, []).append(track)
 
         if track.spotify:
-            track.title += " " + str(self.bot.get_emoji(944554099175727124))
+            track.title += f" {self.bot.get_emoji(944554099175727124)}"
 
         await interaction.followup.send(embed=track.get_embed())
         await self.play_audio(interaction)
@@ -293,7 +285,7 @@ class Play(commands.Cog):
         await interaction.response.defer()
         if self.bot.playing[interaction.guild_id]:
             view = Navigation(self.bot)
-            announce_song(self.bot, interaction, view)
+            await self.announce_song(self.bot, interaction, view)
             await view.wait()
             await interaction.edit_original_response(embed=view.embed, view=None)
 
